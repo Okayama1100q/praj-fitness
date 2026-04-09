@@ -77,7 +77,7 @@ const Dashboard = () => {
   });
 
   // Time Gating Logic
-  const BYPASS_TIME_GATING = true; 
+  const BYPASS_TIME_GATING = false; 
   
   const getCurrentHour = () => new Date().getHours();
   const isCoachTime = BYPASS_TIME_GATING || getCurrentHour() >= 18;
