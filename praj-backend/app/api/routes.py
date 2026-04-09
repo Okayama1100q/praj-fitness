@@ -10,7 +10,7 @@ from app.services.fitness_service import calculate_burn, calculate_surplus
 from app.services.decision_engine import decide_action
 from app.services.workout_engine import get_workout_plan
 from app.services.response_engine import generate_response
-from app.services.praj_intelligence import apply_intelligence
+from app.services.praj_intelligence import apply_intelligence, get_choice_feedback
 
 router = APIRouter()
 
@@ -136,10 +136,14 @@ def coach(data: dict):
         "previous_surplus": prev_surplus,
 
         "options": {
-            "walk": decision.get("walk", {}),
+            "walk": {
+                **decision.get("walk", {}),
+                **get_choice_feedback("walk", decision.get("walk", {}))
+            },
             "workout": {
                 "duration": decision.get("workout", {}).get("duration", 0),
-                "plan": workout_plan
+                "plan": workout_plan,
+                **get_choice_feedback("workout", workout_plan)
             }
         },
 

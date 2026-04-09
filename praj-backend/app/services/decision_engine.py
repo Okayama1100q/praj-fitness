@@ -34,13 +34,13 @@ def decide_action(surplus, energy, steps, activity_type):
         "high": 30,
         "medium": 20,
         "low": 10,
-        "none": 0
+        "none": 10  # Changed from 0 to 10 to ensure option visibility
     }
 
     return {
         "level": level,
         "walk": {
-            "steps": walk_targets[level]
+            "target_steps": walk_targets[level]
         },
         "workout": {
             "duration": workout_targets[level]

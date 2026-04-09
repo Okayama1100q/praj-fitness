@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Send, Activity, Flame, CheckCircle2, Lock, History } from 'lucide-react';
+import { Moon, Send, Activity, Flame, CheckCircle2, Lock, History, Sparkles, TrendingUp, TrendingDown } from 'lucide-react';
 import { Input, TextArea, Button, OutlineButton } from './Shared';
 
 const NightUpdate = ({ onUpdate, result, selectedPlan, nightLog }) => {
@@ -11,11 +11,9 @@ const NightUpdate = ({ onUpdate, result, selectedPlan, nightLog }) => {
   const handleUpdate = (e) => {
     e.preventDefault();
     
-    // Simulate updating day
-    // Extra steps add to burn, cheat meal adds to intake
     const extraSteps = parseInt(finalSteps) || 0;
-    const extraBurn = Math.floor(extraSteps * 0.04); // Rough estimate
-    const extraIntake = cheatMeal.length > 0 ? 500 : 0; // Simple simulation
+    const extraBurn = Math.floor(extraSteps * 0.04);
+    const extraIntake = cheatMeal.length > 0 ? 500 : 0;
     
     const currentSurplus = result?.surplus || 0;
     const currentBurn = result?.burn || 0;
@@ -42,31 +40,39 @@ const NightUpdate = ({ onUpdate, result, selectedPlan, nightLog }) => {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="glass-card p-6 md:p-8 space-y-8"
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="relative space-y-10"
     >
-      <div className="flex justify-between items-center px-1">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/20">
-            <Moon className="w-5 h-5" />
+      <div className="flex justify-between items-end px-2">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Moon className="w-3 h-3 text-indigo-400" />
+            <span className="text-[10px] font-black tracking-[0.4em] text-indigo-400 uppercase">Closing Protocol</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight">Night Update</h2>
+          <h2 className="text-4xl font-black tracking-tighter text-white">Night Update</h2>
         </div>
         {isLocked && (
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 bg-indigo-400/10 px-2 py-1 rounded-full uppercase tracking-wider">
+          <motion.div 
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-1.5 text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-3 py-1.5 rounded-full uppercase tracking-widest"
+          >
             <Lock className="w-3 h-3" /> Day closed 💪
-          </div>
+          </motion.div>
         )}
       </div>
 
       {!updatedData && !isLocked ? (
-        <>
-          {/* Today So Far Section */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold tracking-[0.2em] text-white/30 uppercase pl-1">Today So Far</h3>
-            <div className="grid grid-cols-3 gap-2">
+        <div className="space-y-10">
+          {/* Status Snapshot */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+              <h3 className="text-[10px] font-black tracking-[0.3em] text-white/20 uppercase">Current Status</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
               <SummaryItem label="INTAKE" value={result?.intake || 0} unit="kcal" />
               <SummaryItem label="BURN" value={result?.burn || 0} unit="kcal" />
               <SummaryItem 
@@ -77,115 +83,140 @@ const NightUpdate = ({ onUpdate, result, selectedPlan, nightLog }) => {
                 status={result?.surplus > 0 ? 'bad' : 'good'} 
               />
             </div>
+          </div>
+          
+          {/* Active Plan Card */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+              <h3 className="text-[10px] font-black tracking-[0.3em] text-white/20 uppercase">Active Objective</h3>
+            </div>
             
-            {/* Selected Plan Details */}
             {selectedPlan ? (
-              <div className="p-5 rounded-3xl bg-white/[0.03] border border-white/[0.05] space-y-4">
-                <div className="flex items-center gap-3">
-                  {selectedPlan.type === 'walk' ? (
-                    <Activity className="w-5 h-5 text-emerald-400" />
-                  ) : (
-                    <Flame className="w-5 h-5 text-orange-400" />
-                  )}
-                  <p className="font-bold text-sm tracking-tight">
-                    {selectedPlan.type === 'walk' ? 'Walk Target' : 'Workout Protocol'}
-                  </p>
+              <motion.div 
+                whileHover={{ scale: 1.01 }}
+                className="p-8 rounded-[40px] bg-white/[0.03] border border-white/10 shadow-xl overflow-hidden relative group"
+              >
+                <div className={`absolute top-0 left-0 w-1.5 h-full ${selectedPlan.type === 'walk' ? 'bg-emerald-500' : 'bg-orange-500'} opacity-30 group-hover:opacity-100 transition-opacity`} />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                   <div className="flex items-center gap-5">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${selectedPlan.type === 'walk' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'} border border-white/5`}>
+                        {selectedPlan.type === 'walk' ? <Activity className="w-6 h-6" /> : <Flame className="w-6 h-6" />}
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-1">SELECTED PROTOCOL</p>
+                        <h4 className="text-2xl font-black text-white tracking-tight">{selectedPlan.type === 'walk' ? 'Movement Target' : 'High Intensity'}</h4>
+                      </div>
+                   </div>
+                   
+                   <div className="text-right">
+                      <p className={`text-5xl font-black tracking-tighter ${selectedPlan.type === 'walk' ? 'text-emerald-400' : 'text-orange-400'}`}>
+                        {selectedPlan.type === 'walk' ? selectedPlan.steps : selectedPlan.duration}
+                        <span className="text-sm ml-2 font-bold opacity-30 uppercase tracking-widest">{selectedPlan.type === 'walk' ? 'steps' : 'mins'}</span>
+                      </p>
+                   </div>
                 </div>
                 
-                <div className="flex flex-col gap-3">
-                  <div className="flex justify-between items-end">
-                    <p className={`text-2xl font-black tracking-tight ${selectedPlan.type === 'walk' ? 'text-emerald-400' : 'text-orange-400'}`}>
-                      {selectedPlan.type === 'walk' ? selectedPlan.steps : selectedPlan.duration}
-                      <span className="text-[10px] ml-1 font-bold opacity-40 uppercase tracking-widest">{selectedPlan.type === 'walk' ? 'steps' : 'mins'}</span>
-                    </p>
+                {selectedPlan.exercises && (
+                  <div className="flex flex-wrap gap-2.5 mt-8 pt-8 border-t border-white/5">
+                    {selectedPlan.exercises.map((ex, i) => (
+                      <span key={i} className="px-4 py-2 rounded-xl bg-white/5 text-white/40 text-[10px] font-bold border border-white/5 hover:bg-white/10 transition-colors uppercase tracking-widest leading-none">
+                        {ex}
+                      </span>
+                    ))}
                   </div>
-                  
-                  {selectedPlan.exercises && (
-                    <div className="flex flex-wrap gap-1.5 border-t border-white/5 pt-3">
-                      {selectedPlan.exercises.map((ex, i) => (
-                        <span key={i} className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/10">
-                          {ex}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+                )}
+              </motion.div>
             ) : (
-              <div className="p-4 rounded-xl border border-dashed border-white/10 text-center">
-                <p className="text-white/30 text-xs italic">No check-in plan selected head to Coach tab</p>
+              <div className="p-12 rounded-[40px] border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="p-4 rounded-full bg-white/5">
+                  <Sparkles className="w-6 h-6 text-white/10" />
+                </div>
+                <p className="text-white/20 text-xs font-bold uppercase tracking-[0.3em] italic max-w-[200px] leading-relaxed">
+                  No plan recorded. Visit the coach tab for analysis.
+                </p>
               </div>
             )}
           </div>
 
-          <form onSubmit={handleUpdate} className="space-y-6 pt-2">
-            <div className="space-y-4">
+          <form onSubmit={handleUpdate} className="space-y-10 pt-4 border-t border-white/5">
+            <div className="grid gap-8">
               <Input 
-                label="Final Day Steps" 
+                label="FINAL DAILY STEPS" 
                 name="finalSteps" 
                 type="number" 
                 value={finalSteps} 
                 onChange={(e) => setFinalSteps(e.target.value)} 
-                placeholder="e.g., 12500"
+                placeholder="Log your actual total movement"
                 required
               />
               <TextArea 
-                label="Cheat Meal / Extra (Optional)" 
+                label="NUTRITIONAL ANOMALIES" 
                 name="cheatMeal" 
                 value={cheatMeal} 
                 onChange={(e) => setCheatMeal(e.target.value)} 
-                placeholder="e.g., A chocolate bar, 2 cookies"
+                placeholder="Logged cheat meals, extra snacks, or unexpected intake..."
                 rows={2}
               />
             </div>
 
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-white border-none glow-button h-14 rounded-2xl">
-              Update Day <Send className="w-4 h-4 ml-2" />
+            <Button type="submit">
+              Complete Cycle <Send className="w-4 h-4 ml-2" />
             </Button>
           </form>
-        </>
+        </div>
       ) : (
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="space-y-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-12 py-10"
         >
-          <div className="text-center py-6">
-            <div className="w-20 h-20 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-indigo-500/20">
-              <CheckCircle2 className="w-10 h-10" />
+          <div className="text-center space-y-6">
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", damping: 12 }}
+              className="w-24 h-24 rounded-[32px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mx-auto shadow-2xl shadow-indigo-500/10"
+            >
+              <CheckCircle2 className="w-12 h-12" />
+            </motion.div>
+            <div className="space-y-2">
+               <h3 className="text-4xl font-black tracking-tighter text-white">Daily Cycle Closed</h3>
+               <p className="text-white/30 font-medium text-sm">Protocol synchronization complete. See you tomorrow 👋</p>
             </div>
-            <h3 className="text-2xl font-black tracking-tight mb-2">Details entered today.</h3>
-            <p className="text-white/40 text-sm">See ya tomorrow 👋</p>
           </div>
 
-          <div className="p-7 rounded-[40px] bg-indigo-500/5 border border-indigo-500/10 text-center relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 blur-[100px] rounded-full opacity-30 bg-indigo-500 pointer-events-none" />
-             <p className="text-indigo-400 font-bold uppercase tracking-widest text-[10px] mb-4">Final Summary</p>
-             <div className="flex justify-around items-end">
-               <div className="text-center">
-                 <p className="text-white/30 text-[9px] font-bold tracking-widest uppercase mb-1">Final Burn</p>
-                 <p className="text-3xl font-black tracking-tighter text-white">
+          <div className="p-12 rounded-[56px] bg-[#111116] border border-white/10 shadow-2xl relative overflow-hidden group">
+             <div className="absolute top-0 right-0 w-64 h-64 blur-[120px] rounded-full opacity-20 bg-indigo-500 pointer-events-none group-hover:opacity-30 transition-opacity" />
+             <div className="absolute bottom-0 left-0 w-64 h-64 blur-[120px] rounded-full opacity-10 bg-indigo-500 pointer-events-none group-hover:opacity-20 transition-opacity" />
+             
+             <p className="text-indigo-400 font-black uppercase tracking-[0.4em] text-[11px] mb-10 text-center relative z-10">Final Intelligence Report</p>
+             <div className="flex justify-around items-center relative z-10">
+               <div className="text-center group-hover:scale-105 transition-transform duration-500">
+                 <p className="text-white/20 text-[10px] font-black tracking-[0.2em] uppercase mb-4">Final Burn</p>
+                 <p className="text-5xl font-black tracking-tighter text-white">
                    {updatedData?.finalBurn || nightLog?.finalBurn}
-                   <span className="text-[10px] ml-1 font-bold text-white/30 tracking-tight">KCAL</span>
+                   <span className="text-[12px] ml-2 font-bold text-white/20 tracking-widest uppercase">kcal</span>
                  </p>
                </div>
-               <div className="w-px h-12 bg-white/5" />
-               <div className="text-center">
-                 <p className="text-white/30 text-[9px] font-bold tracking-widest uppercase mb-1">Final Surplus</p>
-                 <p className={`text-3xl font-black tracking-tighter ${
-                   (updatedData?.finalSurplus || nightLog?.finalSurplus) > 0 ? 'text-rose-400' : 'text-emerald-400'
+               <div className="w-px h-20 bg-white/10" />
+               <div className="text-center group-hover:scale-105 transition-transform duration-500">
+                 <p className="text-white/20 text-[10px] font-black tracking-[0.2em] uppercase mb-4">Final Surplus</p>
+                 <p className={`text-5xl font-black tracking-tighter ${
+                   (updatedData?.finalSurplus || nightLog?.finalSurplus) > 0 ? 'text-rose-500' : 'text-emerald-500'
                  }`}>
                    {(updatedData?.finalSurplus || nightLog?.finalSurplus) > 0 ? '+' : ''}
                    {updatedData?.finalSurplus || nightLog?.finalSurplus}
-                   <span className="text-[10px] ml-1 font-bold opacity-50 tracking-tight uppercase">KCAL</span>
+                   <span className="text-[12px] ml-2 font-bold opacity-30 tracking-widest uppercase text-white">kcal</span>
                  </p>
                </div>
              </div>
           </div>
           
-          <div className="flex items-center justify-center pt-2">
-            <div className="flex items-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-widest">
-               <History className="w-4 h-4" /> Logged in local storage
+          <div className="flex items-center justify-center pt-4">
+            <div className="flex items-center gap-3 bg-white/5 py-4 px-8 rounded-full border border-white/5">
+               <History className="w-4 h-4 text-white/20" />
+               <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">Session Archive Confirmed</span>
             </div>
           </div>
         </motion.div>
@@ -199,14 +230,17 @@ const SummaryItem = ({ label, value, unit, isStatus, status }) => {
   const isBad = status === 'bad';
   
   return (
-    <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
-      <p className="text-white/40 text-[9px] font-bold tracking-widest uppercase mb-1">{label}</p>
-      <p className={`font-black tracking-tighter ${isGood ? 'text-emerald-400' : isBad ? 'text-rose-400' : 'text-white'}`}>
-        {value}
-        <span className="text-[9px] ml-0.5 font-normal opacity-30 tracking-tighter">{unit}</span>
-      </p>
+    <div className="p-6 rounded-[32px] bg-white/[0.03] border border-white/5 group hover:bg-white/[0.05] transition-all duration-500">
+      <p className="text-white/20 text-[9px] font-black tracking-[0.2em] uppercase mb-3">{label}</p>
+      <div className="flex items-end gap-1.5">
+        <p className={`text-3xl font-black tracking-tighter leading-none ${isGood ? 'text-emerald-400' : isBad ? 'text-rose-400' : 'text-white'}`}>
+          {value}
+        </p>
+        <span className="text-[10px] font-bold opacity-30 tracking-tight uppercase leading-none pb-1">{unit}</span>
+      </div>
     </div>
   );
 };
 
 export default NightUpdate;
+
