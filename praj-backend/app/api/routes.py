@@ -11,8 +11,61 @@ from app.services.decision_engine import decide_action
 from app.services.workout_engine import get_workout_plan
 from app.services.response_engine import generate_response
 from app.services.praj_intelligence import apply_intelligence, get_choice_feedback
+from app.models.user import User
+from passlib.context import CryptContext
+from jose import jwt
 
 router = APIRouter()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+SECRET_KEY = "praj_super_secret_key"
+ALGORITHM = "HS256"
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+@router.post("/register")
+def register(data: dict):
+    db = SessionLocal()
+    existing = db.query(User).filter(User.email == data["email"]).first()
+    if existing:
+        return {"error": "Email already registered"}
+    
+    new_user = User(
+        name=data["name"],
+        email=data["email"],
+        number=data["number"],
+        password_hash=get_password_hash(data["password"]),
+        weight=float(data["weight"]),
+        height=float(data["height"]),
+        age=int(data["age"])
+    )
+    db.add(new_user)
+    db.commit()
+    return {"message": "User registered successfully"}
+
+@router.post("/login")
+def login(data: dict):
+    db = SessionLocal()
+    user = db.query(User).filter(User.email == data["email"]).first()
+    if not user or not verify_password(data["password"], user.password_hash):
+        return {"error": "Invalid credentials"}
+    
+    token = jwt.encode({"user_id": user.id, "email": user.email}, SECRET_KEY, algorithm=ALGORITHM)
+    return {
+        "access_token": token,
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "weight": user.weight,
+            "height": user.height,
+            "age": user.age
+        }
+    }
+
 
 
 @router.post("/coach")
@@ -32,12 +85,23 @@ def coach(data: dict):
     intake = food_data["total_calories"] + dinner_data["total_calories"]
 
     # -----------------------------
+    # 👤 User Context (Mocking session via token or plain user lookup for MVP)
+    # -----------------------------
+    user_id = data.get("user_id", 1) # Default to 1 for demo
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    # Use profile data if user found, fallback to body data
+    weight = user.weight if user else data.get("weight", 70)
+    height = user.height if user else data.get("height", 175)
+    age = user.age if user else data.get("age", 25)
+
+    # -----------------------------
     # 🔥 Burn
     # -----------------------------
     burn_data = calculate_burn(
-        data["weight"],
-        data["height"],
-        data["age"],
+        weight,
+        height,
+        age,
         data["steps"],
         data.get("activity_type", "none"),
         data.get("duration", 0)

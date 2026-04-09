@@ -2,44 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Inter';
-  src: url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-}
-
 @layer base {
   body {
-    @apply bg-dark text-primary font-sans;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    background-color: #060608;
+    @apply text-white font-sans antialiased;
     overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-rajdhani {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+  }
+
+  .font-inter {
+    font-family: 'Inter', sans-serif;
   }
 }
 
 @layer components {
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  .glass-premium {
+    @apply bg-[#0d0d0f]/80 backdrop-blur-3xl border border-white/5;
   }
   
-  .glass-card {
-    @apply bg-[#141416]/50 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-2xl;
+  .glass-card-peak {
+    @apply bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[40px] shadow-2xl;
   }
   
-  .glow-button {
-    @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)];
+  .nav-item-active {
+    @apply bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.15)] scale-105;
   }
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::selection {
+  background: white;
+  color: black;
 }

@@ -2,79 +2,123 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Input, Button } from '../components/Shared';
-import { Activity } from 'lucide-react';
+import { Activity, User, Phone, Mail, Lock, Weight, Ruler, Calendar } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = 'http://127.0.0.1:8000';
 
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    number: '',
+    email: '',
+    password: '',
+    weight: '',
+    height: '',
+    age: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
-    if (email && password && name) {
-      localStorage.setItem('praj_auth', 'true');
-      navigate('/dashboard');
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await axios.post(`${API_URL}/register`, formData);
+      if (response.data.error) {
+        setError(response.data.error);
+      } else {
+        alert("Account created successfully! Please log in.");
+        navigate('/login');
+      }
+    } catch (err) {
+      setError("Failed to reach server. Is backend running?");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#09090b]">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#060608] py-12">
       {/* Background Decor */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-white/[0.02] blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-500/[0.02] blur-[120px] pointer-events-none" />
       
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md p-8 glass-card z-10 mx-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-xl p-10 glass-card-peak z-10 mx-4"
       >
-        <div className="flex justify-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
-            <Activity className="w-6 h-6 text-white" />
+        <div className="flex justify-center mb-10">
+          <div className="w-16 h-16 rounded-[22px] bg-white text-black flex items-center justify-center shadow-[0_10px_30px_rgba(255,255,255,0.1)]">
+            <Activity className="w-8 h-8" />
           </div>
         </div>
         
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Join Praj</h1>
-          <p className="text-white/60">Your AI-driven fitness journey begins.</p>
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-black tracking-tighter mb-3 uppercase font-rajdhani">Praj Protocol</h1>
+          <p className="text-white/20 font-black text-[10px] tracking-[0.5em] uppercase font-rajdhani">Biometric Alignment Sequence</p>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-5">
-          <Input 
-            label="Full Name" 
-            type="text" 
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <Input 
-            label="Email Address" 
-            type="email" 
-            placeholder="name@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <Input 
-            label="Password" 
-            type="password" 
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <Button type="submit" className="mt-6">
-            Create Account
+        {error && (
+            <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold text-center uppercase tracking-widest">
+                {error}
+            </div>
+        )}
+
+        <form onSubmit={handleRegister} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="relative group">
+                <User className="absolute left-4 top-[3.25rem] w-4 h-4 text-white/10 group-focus-within:text-white/40 z-20" />
+                <Input label="Full Name" name="name" value={formData.name} onChange={handleChange} required className="pl-12" />
+            </div>
+            <div className="relative group">
+                <Phone className="absolute left-4 top-[3.25rem] w-4 h-4 text-white/10 group-focus-within:text-white/40 z-20" />
+                <Input label="Phone" name="number" value={formData.number} onChange={handleChange} required className="pl-12" />
+            </div>
+          </div>
+
+          <div className="relative group">
+            <Mail className="absolute left-4 top-[3.25rem] w-4 h-4 text-white/10 group-focus-within:text-white/40 z-20" />
+            <Input label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} required className="pl-12" />
+          </div>
+
+          <div className="relative group">
+            <Lock className="absolute left-4 top-[3.25rem] w-4 h-4 text-white/10 group-focus-within:text-white/40 z-20" />
+            <Input label="Secure Password" name="password" type="password" value={formData.password} onChange={handleChange} required className="pl-12" />
+          </div>
+
+          <div className="grid grid-cols-3 gap-6 pt-4 border-t border-white/5 mt-4">
+            <div className="relative group">
+                <Weight className="absolute left-4 top-[3.25rem] w-4 h-4 text-white/10 group-focus-within:text-white/40 z-20" />
+                <Input label="kg" name="weight" type="number" value={formData.weight} onChange={handleChange} required className="pl-10" />
+            </div>
+            <div className="relative group">
+                <Ruler className="absolute left-4 top-[3.25rem] w-4 h-4 text-white/10 group-focus-within:text-white/40 z-20" />
+                <Input label="cm" name="height" type="number" value={formData.height} onChange={handleChange} required className="pl-10" />
+            </div>
+            <div className="relative group">
+                <Calendar className="absolute left-4 top-[3.25rem] w-4 h-4 text-white/10 group-focus-within:text-white/40 z-20" />
+                <Input label="Age" name="age" type="number" value={formData.age} onChange={handleChange} required className="pl-10" />
+            </div>
+          </div>
+
+          <Button type="submit" className="mt-6" loading={loading}>
+            Initialize Profile
           </Button>
         </form>
 
-        <p className="text-center mt-8 text-sm text-white/50">
-          Already have an account?{' '}
+        <p className="text-center mt-10 text-xs text-white/20 font-bold uppercase tracking-widest">
+          Already aligned?{' '}
           <Link to="/login" className="text-white hover:underline">
-            Log in
+            Establish Link
           </Link>
         </p>
       </motion.div>

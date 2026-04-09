@@ -2,11 +2,11 @@ import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const Input = ({ label, type = 'text', value, onChange, placeholder, required = false, ...props }) => {
+export const Input = ({ label, type = 'text', value, onChange, placeholder, required = false, className = '', ...props }) => {
   return (
-    <div className="flex flex-col space-y-2 w-full group">
+    <div className={`flex flex-col space-y-2 w-full group ${className}`}>
       {label && (
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 group-focus-within:text-white/60 transition-colors ml-1">
+        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
           {label}
         </label>
       )}
@@ -17,20 +17,19 @@ export const Input = ({ label, type = 'text', value, onChange, placeholder, requ
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className="w-full px-5 py-4 bg-white/[0.03] border border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/10 focus:bg-white/[0.06] focus:border-white/20 transition-all text-white placeholder-white/20 selection:bg-white selection:text-black font-medium"
+          className="w-full px-5 py-4 bg-white/[0.02] border border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/5 focus:bg-white/[0.04] focus:border-white/10 transition-all text-white placeholder-white/10 selection:bg-white selection:text-black font-medium font-inter text-sm"
           {...props}
         />
-        <div className="absolute inset-0 rounded-2xl bg-white/5 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none -z-10" />
       </div>
     </div>
   );
 };
 
-export const TextArea = ({ label, value, onChange, placeholder, required = false, rows = 3, ...props }) => {
+export const TextArea = ({ label, value, onChange, placeholder, required = false, rows = 3, className = '', ...props }) => {
   return (
-    <div className="flex flex-col space-y-2 w-full group">
+    <div className={`flex flex-col space-y-2 w-full group ${className}`}>
       {label && (
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 group-focus-within:text-white/60 transition-colors ml-1">
+        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
           {label}
         </label>
       )}
@@ -41,20 +40,19 @@ export const TextArea = ({ label, value, onChange, placeholder, required = false
           placeholder={placeholder}
           required={required}
           rows={rows}
-          className="w-full px-5 py-4 bg-white/[0.03] border border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/10 focus:bg-white/[0.06] focus:border-white/20 transition-all text-white placeholder-white/20 resize-none selection:bg-white selection:text-black font-medium"
+          className="w-full px-5 py-4 bg-white/[0.02] border border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/5 focus:bg-white/[0.04] focus:border-white/10 transition-all text-white placeholder-white/10 resize-none selection:bg-white selection:text-black font-medium font-inter text-sm"
           {...props}
         />
-        <div className="absolute inset-0 rounded-2xl bg-white/5 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none -z-10" />
       </div>
     </div>
   );
 };
 
-export const Select = ({ label, value, onChange, options, required = false, ...props }) => {
+export const Select = ({ label, value, onChange, options, required = false, className = '', ...props }) => {
   return (
-    <div className="flex flex-col space-y-2 w-full group">
+    <div className={`flex flex-col space-y-2 w-full group ${className}`}>
       {label && (
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 group-focus-within:text-white/60 transition-colors ml-1">
+        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
           {label}
         </label>
       )}
@@ -63,7 +61,7 @@ export const Select = ({ label, value, onChange, options, required = false, ...p
           value={value}
           onChange={onChange}
           required={required}
-          className="appearance-none w-full px-5 py-4 bg-[#09090b] border border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/10 focus:bg-[#0c0c0e] focus:border-white/20 transition-all text-white font-medium cursor-pointer"
+          className="appearance-none w-full px-5 py-4 bg-[#0d0d0f] border border-white/5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/5 focus:bg-[#121214] focus:border-white/10 transition-all text-white font-medium cursor-pointer text-sm font-inter"
           {...props}
         >
           {options.map((opt, i) => (
@@ -77,7 +75,6 @@ export const Select = ({ label, value, onChange, options, required = false, ...p
             <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
           </svg>
         </div>
-        <div className="absolute inset-0 rounded-2xl bg-white/5 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none -z-10" />
       </div>
     </div>
   );
@@ -86,15 +83,15 @@ export const Select = ({ label, value, onChange, options, required = false, ...p
 export const Button = ({ children, onClick, type = 'button', loading = false, disabled = false, className = '', ...props }) => {
   return (
     <motion.button
-      whileHover={{ scale: 1.02, translateY: -2 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.01, translateY: -1 }}
+      whileTap={{ scale: 0.99 }}
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`relative w-full overflow-hidden rounded-2xl bg-white text-black font-black uppercase tracking-widest text-xs py-5 px-6 transition-all shadow-[0_20px_40px_rgba(255,255,255,0.1)] hover:bg-white hover:shadow-[0_25px_50px_rgba(255,255,255,0.15)] flex justify-center items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`relative w-full overflow-hidden rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] text-[10px] py-5 px-6 transition-all shadow-[0_20px_40px_rgba(255,255,255,0.05)] hover:shadow-[0_25px_50px_rgba(255,255,255,0.1)] flex justify-center items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed font-rajdhani ${className}`}
       {...props}
     >
-      {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
       {!loading && children}
     </motion.button>
   );
@@ -103,12 +100,12 @@ export const Button = ({ children, onClick, type = 'button', loading = false, di
 export const OutlineButton = ({ children, onClick, type = 'button', disabled = false, className = '', ...props }) => {
   return (
     <motion.button
-      whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.05)' }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.01, backgroundColor: 'rgba(255,255,255,0.03)' }}
+      whileTap={{ scale: 0.99 }}
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`w-full rounded-2xl bg-transparent border border-white/10 text-white font-bold uppercase tracking-widest text-[10px] py-5 px-6 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`w-full rounded-2xl bg-transparent border border-white/5 text-white/40 font-bold uppercase tracking-[0.2em] text-[9px] py-5 px-6 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-rajdhani hover:text-white hover:border-white/10 ${className}`}
       {...props}
     >
       {children}

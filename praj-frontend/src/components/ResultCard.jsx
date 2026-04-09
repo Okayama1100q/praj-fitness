@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCcw, TrendingUp, TrendingDown, ArrowUpRight, Sparkles, Zap } from 'lucide-react';
+import { RefreshCcw, TrendingUp, TrendingDown, Sparkles, Zap, Brain } from 'lucide-react';
 
 const ResultCard = ({ result, onReset }) => {
   if (!result) return null;
@@ -13,68 +13,72 @@ const ResultCard = ({ result, onReset }) => {
       initial={{ opacity: 0, scale: 0.98, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="relative space-y-8"
+      className="relative space-y-10"
     >
-      {/* Header Info */}
-      <div className="flex justify-between items-end px-2">
+      {/* diagnostic header */}
+      <div className="flex justify-between items-end px-1">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-3 h-3 text-white/40" />
-            <span className="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase">Internal Scan Complete</span>
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-3 bg-white/20 rounded-full" />
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 font-rajdhani">Diagnostic Output</span>
           </div>
-          <h2 className="text-4xl font-black tracking-tighter text-white">Daily Analysis</h2>
+          <h2 className="text-5xl font-black tracking-tighter text-white uppercase font-rajdhani leading-none">Analysis Cluster</h2>
         </div>
         <motion.button 
-          whileHover={{ rotate: 180 }}
-          transition={{ duration: 0.7, ease: "anticipate" }}
+          whileHover={{ rotate: 90, scale: 1.1 }}
+          transition={{ duration: 0.4 }}
           onClick={onReset} 
-          className="p-3 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+          className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors"
         >
-          <RefreshCcw className="w-4 h-4 text-white/40" />
+          <RefreshCcw className="w-5 h-5 text-white/20" />
         </motion.button>
       </div>
 
-      {/* Praj Message - Premium Chat Bubble */}
+      {/* Intelligence Insight */}
       <motion.div 
-        initial={{ opacity: 0, x: -20 }}
+        initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative p-10 rounded-[40px] bg-white/[0.03] border border-white/10 shadow-2xl overflow-hidden group"
+        className="relative p-12 rounded-[48px] bg-[#0d0d0f]/60 backdrop-blur-3xl border border-white/[0.03] overflow-hidden group shadow-2xl"
       >
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500 opacity-50 group-hover:opacity-100 transition-opacity" />
-        <div className="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none" />
-        <p className="text-2xl font-black leading-[1.2] text-white/90 tracking-tight">
+        <div className="absolute top-0 left-0 w-1 h-full bg-white opacity-20 group-hover:opacity-40 transition-opacity" />
+        <div className="absolute -right-20 -top-20 w-80 h-80 bg-white/5 blur-[120px] rounded-full pointer-events-none" />
+        
+        <div className="flex items-center gap-3 mb-6 opacity-40">
+            <Brain className="w-4 h-4" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] font-rajdhani italic">Praj Insight Engine</span>
+        </div>
+        
+        <p className="text-3xl font-black leading-tight text-white tracking-tighter font-rajdhani uppercase">
           "{result.message}"
         </p>
       </motion.div>
 
-      {/* Carry Over Highlight */}
+      {/* Persistence Carry Over */}
       <AnimatePresence>
         {hasCarryOver && (
           <motion.div 
-            initial={{ opacity: 0, y: -20, height: 0 }}
+            initial={{ opacity: 0, y: -10, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
-            className="px-6 py-4 rounded-3xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-between"
+            className="px-8 py-5 rounded-[28px] bg-rose-500/[0.03] border border-rose-500/10 flex items-center justify-between"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-rose-500/20">
-                <TrendingUp className="w-4 h-4 text-rose-400" />
-              </div>
-              <span className="text-[11px] font-black uppercase tracking-widest text-rose-400">Carried Over Surplus</span>
+            <div className="flex items-center gap-4">
+               <TrendingUp className="w-4 h-4 text-rose-500/40" />
+               <span className="text-[10px] font-black uppercase tracking-[0.25em] text-rose-500/60 font-rajdhani">Residual Metabolic Surplus</span>
             </div>
-            <p className="text-xl font-black tracking-tighter text-rose-400">
-              +{carryOverAmount} <span className="text-[10px] opacity-40">kcal</span>
+            <p className="text-2xl font-black tracking-tighter text-rose-500 font-rajdhani">
+              +{carryOverAmount} <span className="text-[10px] uppercase opacity-30 tracking-widest font-inter">Kcal</span>
             </p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Metrics Grid */}
+      {/* metrics grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricItem label="INTAKE" value={result.intake} unit="kcal" delay={0.3} />
-        <MetricItem label="BASE BURN" value={result.burn} unit="kcal" delay={0.4} />
+        <MetricItem label="INGEST" value={result.intake} unit="kcal" delay={0.3} />
+        <MetricItem label="METABOLIC BASE" value={result.burn} unit="kcal" delay={0.4} />
         <MetricItem 
-          label="NET SURPLUS" 
+          label="NET DELTA" 
           value={result.surplus} 
           unit="kcal" 
           status={result.surplus > 0 ? 'bad' : 'good'} 
@@ -82,7 +86,7 @@ const ResultCard = ({ result, onReset }) => {
           delay={0.5}
         />
         <MetricItem 
-          label="ADJ. SURPLUS" 
+          label="ADJ. STATUS" 
           value={result.adjusted_surplus} 
           unit="kcal" 
           highlight
@@ -102,29 +106,29 @@ const MetricItem = ({ label, value, unit, status, sign, highlight, delay }) => {
   
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className={`p-6 rounded-[32px] flex flex-col justify-between transition-all duration-500 border relative overflow-hidden group shadow-lg ${
-        highlight ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-white/[0.02] border-white/5'
+      className={`p-7 rounded-[40px] flex flex-col justify-between transition-all duration-700 border relative overflow-hidden group ${
+        highlight ? 'bg-white/[0.04] border-white/10' : 'bg-white/[0.01] border-white/5'
       }`}
     >
-      <div className="flex justify-between items-start mb-4">
-        <span className={`text-[9px] font-black tracking-[0.2em] uppercase ${highlight ? 'text-indigo-400' : 'text-white/20'}`}>
+      <div className="flex justify-between items-start mb-6">
+        <span className={`text-[10px] font-black tracking-[0.2em] uppercase font-rajdhani ${highlight ? 'text-white' : 'text-white/20'}`}>
           {label}
         </span>
-        {highlight && <Zap className="w-3 h-3 text-indigo-400 fill-indigo-400" />}
+        {highlight && <Zap className="w-3 h-3 text-white fill-white opacity-40" />}
       </div>
       <div className="space-y-0 text-left">
-        <span className={`text-4xl font-black tracking-tighter block ${colorClass}`}>
+        <span className={`text-5xl font-black tracking-tighter block font-rajdhani leading-none ${colorClass}`}>
           {sign && value > 0 ? '+' : ''}{value}
         </span>
-        <span className="text-[10px] font-bold opacity-30 uppercase tracking-widest block transform translate-y-[-4px]">{unit}</span>
+        <span className="text-[10px] font-black opacity-20 uppercase tracking-[0.3em] block mt-2 font-rajdhani">{unit}</span>
       </div>
       
-      {/* Small directional icon */}
-      <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-40 transition-opacity">
-        {isGood ? <TrendingDown className="w-4 h-4 text-emerald-400" /> : <TrendingUp className="w-4 h-4 text-rose-400" />}
+      {/* Directional Accent */}
+      <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-20 transition-all transform translate-y-2 group-hover:translate-y-0">
+        {isGood ? <TrendingDown className="w-5 h-5 text-emerald-400" /> : <TrendingUp className="w-5 h-5 text-rose-400" />}
       </div>
     </motion.div>
   );

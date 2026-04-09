@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { Activity, LogOut, ChevronRight, Moon, History, Zap, CheckCircle2, RefreshCcw } from 'lucide-react';
+import { Activity, LogOut, ChevronRight, Moon, History, Zap, CheckCircle2, RefreshCcw, User } from 'lucide-react';
 
 import InputCard from '../components/InputCard';
 import ResultCard from '../components/ResultCard';
@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [result, setResult] = useState(null);
   const [activeTab, setActiveTab] = useState('coach'); // 'coach', 'night', 'history'
   const [logs, setLogs] = useState([]);
+  const [user, setUser] = useState(null);
   
   // Persistence state
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -26,11 +27,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     const isAuth = localStorage.getItem('praj_auth');
-    if (!isAuth) {
+    const userData = localStorage.getItem('praj_user');
+    
+    if (!isAuth || !userData) {
       navigate('/login');
+    } else {
+      setUser(JSON.parse(userData));
     }
     
-    // Load local storage states
     loadPersistedData();
     fetchLogs();
   }, [navigate]);
@@ -67,12 +71,12 @@ const Dashboard = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 6 PM Data
+  // 6 PM Data - Biometrics REMOVED (pulled from user profile)
   const [formData, setFormData] = useState({
-    food: '', dinner: '', steps: '', activity_type: 'none', duration: '', energy: 'normal', weight: '70', height: '175', age: '25'
+    food: '', dinner: '', steps: '', activity_type: 'none', duration: '', energy: 'normal'
   });
 
-  // Time Gating Logic (SET TO true FOR IMMEDIATE TESTING)
+  // Time Gating Logic
   const BYPASS_TIME_GATING = true; 
   
   const getCurrentHour = () => new Date().getHours();
@@ -81,19 +85,15 @@ const Dashboard = () => {
 
   const isDayClosed = !!nightLog;
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     const payload = {
       ...formData,
+      user_id: user?.id,
       steps: parseInt(formData.steps) || 0,
-      duration: parseInt(formData.duration) || 0,
-      weight: parseFloat(formData.weight) || 70,
-      height: parseFloat(formData.height) || 175,
-      age: parseInt(formData.age) || 25,
+      duration: parseInt(formData.duration) || 0
     };
 
     try {
@@ -110,7 +110,7 @@ const Dashboard = () => {
       setResult(response.data);
     } catch (error) {
       console.error("API Error", error);
-      alert("Failed to get recommendation from Praj. Is backend running?");
+      alert("Diagnostic Failure. Check backend connection.");
     } finally {
       setLoading(false);
     }
@@ -127,11 +127,8 @@ const Dashboard = () => {
   };
 
   const handleNightUpdate = (finalResult) => {
-    // Robust date generation to match backend YYYY-MM-DD
-    const now = new Date();
-    const today = now.toLocaleDateString('en-CA'); // en-CA format is YYYY-MM-DD
+    const today = new Date().toLocaleDateString('en-CA');
     
-    // Save daily entry to local history for detailed view
     const dailyReport = {
       date: today,
       intake: result?.intake,
@@ -149,105 +146,103 @@ const Dashboard = () => {
     
     setNightLog(finalResult);
     setLocalHistory(updatedHistory);
-    fetchLogs(); // Sync with backend immediately
+    fetchLogs();
   };
 
   const handleLogout = () => {
     localStorage.removeItem('praj_auth');
+    localStorage.removeItem('praj_user');
     navigate('/login');
   };
 
   const handleResetDay = () => {
-    if (window.confirm("This will clear all data for today. Reset from scratch?")) {
+    if (window.confirm("Purge all diagnostic data for today?")) {
       const today = new Date().toLocaleDateString('en-CA');
       localStorage.removeItem(`praj_data_${today}`);
       localStorage.removeItem(`praj_plan_${today}`);
       localStorage.removeItem(`praj_night_${today}`);
       
-      // Update state
       setResult(null);
       setSelectedPlan(null);
       setNightLog(null);
       setFormData({
-        food: '', dinner: '', steps: '', activity_type: 'none', duration: '', energy: 'normal', weight: '70', height: '175', age: '25'
+        food: '', dinner: '', steps: '', activity_type: 'none', duration: '', energy: 'normal'
       });
       setActiveTab('coach');
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-[#060608] flex flex-col lg:flex-row relative overflow-hidden selection:bg-white selection:text-black">
+    <div className="min-h-screen bg-[#060608] flex flex-col lg:flex-row relative overflow-hidden font-inter selection:bg-white selection:text-black">
       {/* Background Decor */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-white/5 blur-[120px] pointer-events-none z-0" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-white/[0.03] blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/[0.03] blur-[120px] pointer-events-none z-0" />
       
-      {/* Sidebar Navigation */}
-      <nav className="w-full lg:w-24 lg:h-screen lg:flex lg:flex-col lg:border-r lg:border-white/5 bg-black/20 backdrop-blur-3xl z-30 lg:justify-between p-6">
-        <div className="flex lg:flex-col items-center justify-between lg:justify-center gap-10">
-          <motion.div whileHover={{ scale: 1.1 }} className="w-14 h-14 rounded-[22px] bg-white text-black flex items-center justify-center font-bold shadow-[0_10px_30px_rgba(255,255,255,0.1)]">
+      {/* Premium Sidebar */}
+      <nav className="w-full lg:w-28 lg:h-screen lg:flex lg:flex-col lg:border-r lg:border-white/5 bg-black/40 backdrop-blur-3xl z-30 lg:justify-between p-8">
+        <div className="flex lg:flex-col items-center justify-between lg:justify-center gap-12">
+          <motion.div whileHover={{ scale: 1.05 }} className="w-14 h-14 rounded-[20px] bg-white text-black flex items-center justify-center shadow-[0_10px_40px_rgba(255,255,255,0.1)]">
             <Activity className="w-8 h-8" />
           </motion.div>
           
-          <div className="flex lg:flex-col gap-6">
-            <NavItem icon={<Zap />} label="Coach" active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} />
-            <NavItem icon={<Moon />} label="Night" active={activeTab === 'night'} onClick={() => setActiveTab('night')} />
-            <NavItem icon={<History />} label="Progress" active={activeTab === 'history'} onClick={() => setActiveTab('history')} />
+          <div className="flex lg:flex-col gap-8">
+            <NavItem icon={<Zap />} label="Core Scan" active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} />
+            <NavItem icon={<Moon />} label="Shutdown" active={activeTab === 'night'} onClick={() => setActiveTab('night')} />
+            <NavItem icon={<History />} label="Archives" active={activeTab === 'history'} onClick={() => setActiveTab('history')} />
           </div>
 
-          <div className="lg:mt-auto flex lg:flex-col gap-4">
+          <div className="lg:mt-auto flex lg:flex-col gap-6 pt-10 border-t border-white/5">
+            <div className="flex items-center justify-center p-4 text-white/10" title={user?.name}>
+                <User className="w-5 h-5" />
+            </div>
             <button 
               onClick={handleResetDay} 
-              className="p-4 text-white/20 hover:text-rose-500 transition-all hover:bg-rose-500/10 rounded-2xl"
-              title="Reset Today"
+              className="p-4 text-white/10 hover:text-rose-500 transition-all hover:bg-rose-500/5 rounded-2xl"
+              title="Purge Sequence"
             >
-              <RefreshCcw className="w-6 h-6" />
+              <RefreshCcw className="w-5 h-5" />
             </button>
-            <button onClick={handleLogout} className="p-4 text-white/20 hover:text-white transition-all hover:bg-white/5 rounded-2xl">
-              <LogOut className="w-6 h-6" />
+            <button onClick={handleLogout} className="p-4 text-white/10 hover:text-white transition-all hover:bg-white/5 rounded-2xl">
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </div>
       </nav>
 
-
-      {/* Main Container */}
       <div className="flex-1 flex flex-col lg:flex-row relative z-10">
-        {/* Left Typographic Side */}
-        <div className="hidden lg:flex w-2/5 min-h-screen flex-col justify-center pl-16 pointer-events-none select-none">
+        {/* Left Side Branding */}
+        <div className="hidden lg:flex w-[35%] min-h-screen flex-col justify-center pl-20 pointer-events-none select-none">
           <div className="space-y-0">
-             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 0.15, x: 0 }} className="text-[9vw] font-black leading-none tracking-tighter">FITNESS</motion.div>
-             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 0.15, x: 0 }} transition={{ delay: 0.1 }} className="text-[9vw] font-black leading-none tracking-tighter text-transparent" style={{ WebkitTextStroke: '2px rgba(255,255,255,0.5)' }}>BALANCE</motion.div>
-             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="text-[9vw] font-black leading-none tracking-tighter bg-gradient-to-br from-white via-white to-white/20 bg-clip-text text-transparent transform translate-y-[-10px]">PRAJ</motion.div>
+             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 0.1, x: 0 }} className="text-[10vw] font-rajdhani font-black leading-none tracking-tighter">PEAK</motion.div>
+             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 0.1, x: 0 }} transition={{ delay: 0.1 }} className="text-[10vw] font-rajdhani font-black leading-none tracking-tighter text-transparent" style={{ WebkitTextStroke: '1px rgba(255,255,255,1)' }}>PERFORMANCE</motion.div>
+             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="text-[10vw] font-rajdhani font-black leading-none tracking-tighter text-white transform translate-y-[-15px]">PRAJ</motion.div>
           </div>
-          <div className="mt-12 h-0.5 w-12 bg-white/10" />
-          <p className="mt-8 text-white/20 text-xs font-bold uppercase tracking-[0.5em] leading-loose">Automated Intelligence<br/>for Human Potential</p>
+          <div className="mt-12 h-0.5 w-16 bg-white/10" />
+          <p className="mt-8 text-white/20 text-[10px] font-black uppercase tracking-[1em] leading-loose font-rajdhani">Automated Protocol Core</p>
         </div>
 
-        {/* Main Interaction Area */}
-        <main className="flex-1 min-h-screen flex items-start justify-center p-4 lg:p-12 overflow-y-auto custom-scrollbar pt-28 lg:pt-12">
-          <div className="w-full max-w-2xl pb-12">
+        {/* Diagnostic Space */}
+        <main className="flex-1 min-h-screen flex items-start justify-center p-6 lg:p-16 overflow-y-auto custom-scrollbar pt-28 lg:pt-16">
+          <div className="w-full max-w-3xl pb-20">
             <AnimatePresence mode="wait">
               {activeTab === 'coach' && (
                 <motion.div 
                   key="coach"
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-8"
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-10"
                 >
                   {!isCoachTime && !result ? (
                     <motion.div 
-                      initial={{ opacity: 0 }} 
-                      animate={{ opacity: 1 }} 
-                      className="p-12 rounded-[48px] bg-white/[0.02] border border-white/5 text-center space-y-6"
+                      className="p-16 rounded-[56px] bg-white/[0.01] border border-white/5 text-center space-y-8"
                     >
-                      <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto border border-indigo-500/20">
-                        <Moon className="w-10 h-10 text-indigo-400" />
+                      <div className="w-24 h-24 rounded-full bg-indigo-500/5 flex items-center justify-center mx-auto border border-indigo-500/10">
+                        <Moon className="w-10 h-10 text-indigo-400/50" />
                       </div>
-                      <div className="space-y-2">
-                        <h3 className="text-2xl font-black text-white tracking-tight">Praj is calculating...</h3>
-                        <p className="text-white/30 text-sm font-medium">Today's consultation opens at <span className="text-white font-black">6:00 PM</span>.</p>
+                      <div className="space-y-4">
+                        <h3 className="text-3xl font-black text-white tracking-tighter font-rajdhani uppercase">Diagnostic Standby</h3>
+                        <p className="text-white/20 text-sm font-medium tracking-widest uppercase">System unlocks at <span className="text-white">18:00 Hours</span></p>
                       </div>
                     </motion.div>
                   ) : !result ? (
@@ -258,7 +253,7 @@ const Dashboard = () => {
                       loading={loading} 
                     />
                   ) : (
-                    <div className="space-y-8 pb-10">
+                    <div className="space-y-12">
                       <ResultCard result={result} onReset={() => setResult(null)} />
                       <ActionPlan 
                         options={result.options} 
@@ -267,22 +262,16 @@ const Dashboard = () => {
                       />
                       
                       {selectedPlan && !isNightTime && (
-                        <motion.div 
-                           initial={{ opacity: 0, y: 20 }}
-                           animate={{ opacity: 1, y: 0 }}
-                           className="flex flex-col items-center py-6 text-center"
-                        >
-                           <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4 border border-indigo-500/20">
-                             <Activity className="w-6 h-6 text-indigo-400" />
-                           </div>
-                           <p className="text-white/40 text-sm font-medium">Analysis complete. Head to the <span className="text-white font-black">Night Update</span> at 10 PM.</p>
-                        </motion.div>
+                        <div className="flex flex-col items-center py-10 text-center space-y-4">
+                           <div className="w-px h-12 bg-gradient-to-b from-white/10 to-transparent" />
+                           <p className="text-white/20 text-xs font-black uppercase tracking-[0.3em] font-rajdhani">Phase 1 Complete. Awaiting Sunset Sequence.</p>
+                        </div>
                       )}
                       
                       {selectedPlan && isNightTime && !nightLog && (
-                         <div className="flex justify-center pt-4">
-                            <button onClick={() => setActiveTab('night')} className="px-8 py-4 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-105 transition-all">
-                              Start Night Update
+                         <div className="flex justify-center pt-6">
+                            <button onClick={() => setActiveTab('night')} className="px-10 py-6 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(255,255,255,0.1)] hover:scale-105 transition-all font-rajdhani">
+                               Synchronize Final Lock
                             </button>
                          </div>
                       )}
@@ -292,19 +281,17 @@ const Dashboard = () => {
               )}
 
               {activeTab === 'night' && (
-                <div className="space-y-8">
+                <div className="space-y-10">
                   {!isNightTime ? (
                     <motion.div 
-                      initial={{ opacity: 0 }} 
-                      animate={{ opacity: 1 }} 
-                      className="p-12 rounded-[48px] bg-white/[0.02] border border-white/5 text-center space-y-6"
+                      className="p-16 rounded-[56px] bg-white/[0.01] border border-white/5 text-center space-y-8"
                     >
-                      <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto border border-indigo-500/20">
-                        <Moon className="w-10 h-10 text-indigo-400" />
+                      <div className="w-24 h-24 rounded-full bg-indigo-500/5 flex items-center justify-center mx-auto border border-indigo-500/10">
+                        <Moon className="w-10 h-10 text-indigo-400/50" />
                       </div>
-                      <div className="space-y-2">
-                        <h3 className="text-2xl font-black text-white tracking-tight">System Cooling...</h3>
-                        <p className="text-white/30 text-sm font-medium">Night Update opens at <span className="text-white font-black">10:00 PM</span>.</p>
+                      <div className="space-y-4">
+                        <h3 className="text-3xl font-black text-white tracking-tighter font-rajdhani uppercase">Sequence Pending</h3>
+                        <p className="text-white/20 text-sm font-medium tracking-widest uppercase">Night update opens at <span className="text-white">22:00 Hours</span></p>
                       </div>
                     </motion.div>
                   ) : (
@@ -329,26 +316,26 @@ const Dashboard = () => {
               )}
             </AnimatePresence>
 
-            {/* Final Day Lock Overlay */}
+            {/* Final Lock Overlay */}
             {isDayClosed && activeTab !== 'history' && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#060608]/80 backdrop-blur-md"
+                className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#060608]/90 backdrop-blur-xl"
               >
-                <div className="w-full max-w-md p-12 rounded-[48px] bg-[#0d0d0f] border border-white/10 text-center space-y-8 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
-                  <div className="w-24 h-24 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto border border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.1)]">
-                    <CheckCircle2 className="w-12 h-12 text-emerald-400" />
+                <div className="w-full max-w-lg p-16 rounded-[60px] glass-card-peak text-center space-y-10 shadow-[0_0_120px_rgba(0,0,0,0.8)] border-white/10">
+                  <div className="w-28 h-28 rounded-full bg-white text-black flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+                    <CheckCircle2 className="w-14 h-14" />
                   </div>
-                  <div className="space-y-3">
-                    <h2 className="text-3xl font-black text-white tracking-tighter">Protocol Completed</h2>
-                    <p className="text-white/40 text-sm font-medium leading-relaxed">The day is officially closed and logged. Great work today! Check back tomorrow at <span className="text-white font-black">6 PM</span>.</p>
+                  <div className="space-y-4">
+                    <h2 className="text-4xl font-rajdhani font-black text-white tracking-tighter uppercase leading-none">Day Cycle Archived</h2>
+                    <p className="text-white/20 text-sm font-medium leading-relaxed font-inter uppercase tracking-widest italic">All metabolic markers logged. Biometric sync complete.</p>
                   </div>
                   <button 
                     onClick={() => setActiveTab('history')}
-                    className="w-full py-5 rounded-3xl bg-white text-black font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:scale-[1.02] transition-all"
+                    className="w-full py-6 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-[0.3em] font-rajdhani shadow-2xl hover:scale-[1.02] transition-all"
                   >
-                    View History
+                    View Secure History
                   </button>
                 </div>
               </motion.div>
@@ -364,16 +351,16 @@ const Dashboard = () => {
 const NavItem = ({ icon, label, active, onClick }) => (
   <button 
     onClick={onClick}
-    className={`p-4 rounded-[20px] transition-all duration-500 flex items-center justify-center group relative ${
-      active ? 'bg-white text-black shadow-2xl scale-105' : 'text-white/20 hover:text-white/40 hover:bg-white/5'
+    className={`p-5 rounded-[22px] transition-all duration-700 flex items-center justify-center group relative ${
+      active ? 'bg-white text-black shadow-[0_20px_40px_rgba(255,255,255,0.2)] scale-110' : 'text-white/10 hover:text-white/30 hover:bg-white/[0.02]'
     }`}
   >
     {React.cloneElement(icon, { className: "w-6 h-6" })}
-    <span className={`absolute left-20 bg-white text-black px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none hidden lg:block`}>
+    <span className={`absolute left-24 bg-white text-black px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap pointer-events-none hidden lg:block font-rajdhani`}>
       {label}
     </span>
     {active && (
-      <motion.div layoutId="nav-glow-enhanced" className="absolute inset-0 rounded-[20px] bg-white/10 blur-xl z-[-1]" />
+      <motion.div layoutId="nav-glow-peak" className="absolute inset-0 rounded-[22px] bg-white/5 blur-2xl z-[-1]" />
     )}
   </button>
 );
