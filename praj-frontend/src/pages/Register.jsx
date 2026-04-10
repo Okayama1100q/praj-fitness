@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Input, Button } from '../components/Shared';
 import { Activity, User, Phone, Mail, Lock, Weight, Ruler, Calendar } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = 'http://127.0.0.1:8000';
+import { request } from '@/config/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +16,7 @@ const Register = () => {
     age: ''
   });
   const [loading, setLoading] = useState(false);
+  const [spinupMessage, setSpinupMessage] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -30,8 +29,16 @@ const Register = () => {
     setLoading(true);
     setError('');
     
+    // Timer to show spin-up message if request takes > 3s
+    const timer = setTimeout(() => setSpinupMessage(true), 3000);
+    
     try {
-      const response = await axios.post(`${API_URL}/register`, formData);
+      const response = await request({
+        method: 'POST',
+        url: '/register',
+        data: formData
+      });
+      
       if (response.data.error) {
         setError(response.data.error);
       } else {
@@ -39,9 +46,12 @@ const Register = () => {
         navigate('/login');
       }
     } catch (err) {
-      setError("Failed to reach server. Is backend running?");
+      console.error("Registration error:", err);
+      setError(err.response?.data?.detail || "Network diagnostic failed. Verify backend connectivity.");
     } finally {
+      clearTimeout(timer);
       setLoading(false);
+      setSpinupMessage(false);
     }
   };
 
@@ -109,6 +119,19 @@ const Register = () => {
                 <Input label="Age" name="age" type="number" value={formData.age} onChange={handleChange} required className="pl-10" />
             </div>
           </div>
+
+          <AnimatePresence>
+            {spinupMessage && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mb-8 p-4 rounded-xl bg-white/[0.03] border border-white/5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] text-center"
+              >
+                Backend is spinning up. Please wait...
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <Button type="submit" className="mt-6" loading={loading}>
             Initialize Profile

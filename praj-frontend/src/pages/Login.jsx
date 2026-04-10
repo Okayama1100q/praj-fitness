@@ -1,37 +1,48 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Input, Button } from '../components/Shared';
 import { Activity, Mail, Lock } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = 'http://127.0.0.1:8000';
+import { request } from '@/config/api';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [spinupMessage, setSpinupMessage] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
+    
+    // Timer to show spin-up message if request takes > 3s
+    const timer = setTimeout(() => setSpinupMessage(true), 3000);
+    
     try {
-      const response = await axios.post(`${API_URL}/login`, { email, password });
-      if (response.data.error) {
-        setError(response.data.error);
-      } else {
+      const response = await request({
+        method: 'POST',
+        url: '/login',
+        data: formData
+      });
+      
+      if (response.data.access_token) {
         localStorage.setItem('praj_auth', response.data.access_token);
         localStorage.setItem('praj_user', JSON.stringify(response.data.user));
         navigate('/dashboard');
       }
     } catch (err) {
-      setError("Login failed. Is backend running?");
+      console.error("Login diagnostic failure:", err);
+      setError(err.response?.data?.detail || "Authorization link unstable. Verify server status.");
     } finally {
+      clearTimeout(timer);
       setLoading(false);
+      setSpinupMessage(false);
     }
   };
 
@@ -69,9 +80,10 @@ const Login = () => {
                 <Input 
                     label="Email Address" 
                     type="email" 
+                    name="email"
                     placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={handleChange}
                     required
                     className="pl-12"
                 />
@@ -81,13 +93,27 @@ const Login = () => {
                 <Input 
                     label="Authorization Code" 
                     type="password" 
+                    name="password"
                     placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={handleChange}
                     required
                     className="pl-12"
                 />
             </div>
+            <AnimatePresence>
+              {spinupMessage && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="p-4 rounded-xl bg-white/[0.03] border border-white/5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] text-center"
+                >
+                  Backend is spinning up. Please wait...
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <Button type="submit" className="mt-8" loading={loading}>
                 Access Protocol
             </Button>

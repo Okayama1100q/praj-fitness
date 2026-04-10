@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import { Activity, LogOut, ChevronRight, Moon, History, Zap, CheckCircle2, RefreshCcw, User } from 'lucide-react';
 
 import InputCard from '../components/InputCard';
@@ -10,11 +9,12 @@ import ActionPlan from '../components/ActionPlan';
 import NightUpdate from '../components/NightUpdate';
 import HistorySection from '../components/HistorySection';
 
-const API_URL = 'http://127.0.0.1:8000';
+import { request } from '@/config/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [spinupMessage, setSpinupMessage] = useState(false);
   const [result, setResult] = useState(null);
   const [activeTab, setActiveTab] = useState('coach'); // 'coach', 'night', 'history'
   const [logs, setLogs] = useState([]);
@@ -59,10 +59,13 @@ const Dashboard = () => {
 
   const fetchLogs = async () => {
     try {
-      const response = await axios.get(`${API_URL}/logs`);
+      const response = await request({
+        method: 'GET',
+        url: '/logs'
+      });
       setLogs(response.data);
-    } catch (error) {
-      console.error('Error fetching logs:', error);
+    } catch (err) {
+      console.error('Archive synchronization failure:', err);
     }
   };
 
@@ -88,6 +91,7 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const timer = setTimeout(() => setSpinupMessage(true), 3000);
     
     const payload = {
       ...formData,
@@ -97,7 +101,12 @@ const Dashboard = () => {
     };
 
     try {
-      const response = await axios.post(`${API_URL}/coach`, payload);
+      const response = await request({
+        method: 'POST',
+        url: '/coach',
+        data: payload
+      });
+      
       const today = new Date().toLocaleDateString('en-CA');
       
       const sessionData = {
@@ -108,11 +117,13 @@ const Dashboard = () => {
       
       localStorage.setItem(`praj_data_${today}`, JSON.stringify(sessionData));
       setResult(response.data);
-    } catch (error) {
-      console.error("API Error", error);
-      alert("Diagnostic Failure. Check backend connection.");
+    } catch (err) {
+      console.error("Diagnostic sequence error:", err);
+      alert(err.response?.data?.detail || "Network link unstable. Verify server connection.");
     } finally {
+      clearTimeout(timer);
       setLoading(false);
+      setSpinupMessage(false);
     }
   };
 
@@ -233,6 +244,20 @@ const Dashboard = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-10"
                 >
+                  <AnimatePresence>
+                    {spinupMessage && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="p-6 rounded-[32px] bg-white/[0.02] border border-white/5 text-center space-y-2 mb-8"
+                      >
+                         <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">Establishing Uplink</p>
+                         <p className="text-xs text-white/20 font-medium">Render backend is initializing. Tactical recalibration in progress...</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {!isCoachTime && !result ? (
                     <motion.div 
                       className="p-16 rounded-[56px] bg-white/[0.01] border border-white/5 text-center space-y-8"

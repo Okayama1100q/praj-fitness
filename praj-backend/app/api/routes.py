@@ -21,10 +21,10 @@ SECRET_KEY = "praj_super_secret_key"
 ALGORITHM = "HS256"
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return pwd_context.hash(password[:72])
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(plain_password[:72], hashed_password)
 
 @router.post("/register")
 def register(data: dict):
