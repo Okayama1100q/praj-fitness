@@ -18,4 +18,8 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
-app.include_router(router)
+app.include_router(router)
+
+@app.get("/")
+def home():
+    return {"message": "Backend running 🚀"}
