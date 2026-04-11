@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { Activity, LogOut, ChevronRight, Moon, History, Zap, CheckCircle2, RefreshCcw, User } from 'lucide-react';
 
 import InputCard from '../components/InputCard';
@@ -8,6 +8,7 @@ import ResultCard from '../components/ResultCard';
 import ActionPlan from '../components/ActionPlan';
 import NightUpdate from '../components/NightUpdate';
 import HistorySection from '../components/HistorySection';
+import ProfileSection from '../components/ProfileSection';
 
 import { request } from '@/config/api';
 
@@ -24,6 +25,72 @@ const Dashboard = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [nightLog, setNightLog] = useState(null);
   const [localHistory, setLocalHistory] = useState([]);
+  
+  // PWA & Notification State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallPopup, setShowInstallPopup] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState('default');
+  
+  // Smooth Mouse Tracking
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  
+  const springConfig = { damping: 50, stiffness: 200 };
+  const smoothX = useSpring(mouseX, springConfig);
+  const smoothY = useSpring(mouseY, springConfig);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    // PWA Install Prompt Listener
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      // Logic to show popup after some delay or user interaction
+      const hasSeenPopup = localStorage.getItem('praj_pwa_prompt_seen');
+      if (!hasSeenPopup) {
+        setTimeout(() => setShowInstallPopup(true), 5000);
+      }
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Notification Permission
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(setNotificationPermission);
+      }
+    }
+
+    // 6 PM Checker (Every Minute)
+    const checkNotification = () => {
+      const now = new Date();
+      if (now.getHours() === 18 && now.getMinutes() === 0) {
+        const lastNotified = localStorage.getItem('praj_last_notified');
+        const todayStr = now.toLocaleDateString();
+        if (lastNotified !== todayStr && Notification.permission === 'granted') {
+          new Notification("PRAJ Diagnostic Reminder", {
+            body: "Operational Window Open: Execute your 18:00 Core Scan now.",
+            icon: "https://cdn-icons-png.flaticon.com/512/1043/1043324.png"
+          });
+          localStorage.setItem('praj_last_notified', todayStr);
+        }
+      }
+    };
+    const interval = setInterval(checkNotification, 60000);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     const isAuth = localStorage.getItem('praj_auth');
@@ -74,12 +141,10 @@ const Dashboard = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 6 PM Data - Biometrics REMOVED (pulled from user profile)
   const [formData, setFormData] = useState({
     food: '', dinner: '', steps: '', activity_type: 'none', duration: '', energy: 'normal'
   });
 
-  // Time Gating Logic
   const BYPASS_TIME_GATING = false; 
   
   const getCurrentHour = () => new Date().getHours();
@@ -183,11 +248,60 @@ const Dashboard = () => {
     }
   };
 
+  const handleClearHistory = () => {
+    if (window.confirm("TERMINAL ACTION: Permanently delete all archived history? This cannot be reversed.")) {
+      localStorage.removeItem('praj_local_history');
+      setLocalHistory([]);
+      setLogs([]);
+      alert("Archive sequence purged.");
+    }
+  };
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setShowInstallPopup(false);
+    }
+    localStorage.setItem('praj_pwa_prompt_seen', 'true');
+  };
+
   return (
     <div className="min-h-screen bg-[#060608] flex flex-col lg:flex-row relative overflow-hidden font-inter selection:bg-white selection:text-black">
-      {/* Background Decor */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-white/[0.03] blur-[120px] pointer-events-none z-0" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/[0.03] blur-[120px] pointer-events-none z-0" />
+      {/* Dynamic Background Blobs */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+          <motion.div 
+            style={{ 
+                x: smoothX, 
+                y: smoothY,
+                translateX: '-50%',
+                translateY: '-50%'
+            }}
+            className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-white/[0.03] blur-[120px]" 
+          />
+          <motion.div 
+            style={{ 
+                x: smoothX, 
+                y: smoothY,
+                translateX: '-20%',
+                translateY: '-20%'
+            }}
+            className="absolute bottom-[10%] right-[10%] w-[30vw] h-[30vw] rounded-full bg-indigo-500/[0.04] blur-[150px]" 
+          />
+          <motion.div 
+            style={{ 
+                x: smoothX, 
+                y: smoothY,
+                translateX: '-80%',
+                translateY: '-80%'
+            }}
+            className="absolute top-[50%] left-[50%] w-[25vw] h-[25vw] rounded-full bg-white/[0.01] blur-[100px]" 
+          />
+      </div>
+
+      <div className="noise-overlay" />
       
       {/* Premium Sidebar */}
       <nav className="w-full lg:w-28 lg:h-screen lg:flex lg:flex-col lg:border-r lg:border-white/5 bg-black/40 backdrop-blur-3xl z-30 lg:justify-between p-8">
@@ -200,19 +314,10 @@ const Dashboard = () => {
             <NavItem icon={<Zap />} label="Core Scan" active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} />
             <NavItem icon={<Moon />} label="Shutdown" active={activeTab === 'night'} onClick={() => setActiveTab('night')} />
             <NavItem icon={<History />} label="Archives" active={activeTab === 'history'} onClick={() => setActiveTab('history')} />
+            <NavItem icon={<User />} label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
           </div>
 
           <div className="lg:mt-auto flex lg:flex-col gap-6 pt-10 border-t border-white/5">
-            <div className="flex items-center justify-center p-4 text-white/10" title={user?.name}>
-                <User className="w-5 h-5" />
-            </div>
-            <button 
-              onClick={handleResetDay} 
-              className="p-4 text-white/10 hover:text-rose-500 transition-all hover:bg-rose-500/5 rounded-2xl"
-              title="Purge Sequence"
-            >
-              <RefreshCcw className="w-5 h-5" />
-            </button>
             <button onClick={handleLogout} className="p-4 text-white/10 hover:text-white transition-all hover:bg-white/5 rounded-2xl">
               <LogOut className="w-5 h-5" />
             </button>
@@ -296,7 +401,7 @@ const Dashboard = () => {
                       {selectedPlan && isNightTime && !nightLog && (
                          <div className="flex justify-center pt-6">
                             <button onClick={() => setActiveTab('night')} className="px-10 py-6 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(255,255,255,0.1)] hover:scale-105 transition-all font-rajdhani">
-                               Synchronize Final Lock
+                                Synchronize Final Lock
                             </button>
                          </div>
                       )}
@@ -331,6 +436,16 @@ const Dashboard = () => {
                 </div>
               )}
 
+              {activeTab === 'profile' && (
+                <ProfileSection 
+                  key="profile"
+                  user={user}
+                  handleLogout={handleLogout}
+                  handleResetDay={handleResetDay}
+                  handleClearHistory={handleClearHistory}
+                />
+              )}
+
               {activeTab === 'history' && (
                 <HistorySection 
                   key="history"
@@ -341,8 +456,43 @@ const Dashboard = () => {
               )}
             </AnimatePresence>
 
+            <AnimatePresence>
+              {showInstallPopup && deferredPrompt && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-6"
+                >
+                  <div className="p-8 rounded-[40px] glass-card-peak border-white/20 shadow-[0_40px_100px_rgba(0,0,0,0.8)] text-center space-y-6">
+                    <div className="w-16 h-16 rounded-2xl bg-white text-black flex items-center justify-center mx-auto shadow-2xl">
+                      <Activity className="w-8 h-8" />
+                    </div>
+                    <div className="space-y-2">
+                       <h3 className="text-xl font-rajdhani font-black text-white uppercase tracking-tighter">Install Protocol</h3>
+                       <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest leading-relaxed">Add PRAJ to your home screen for instantaneous biometric access.</p>
+                    </div>
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => { setShowInstallPopup(false); localStorage.setItem('praj_pwa_prompt_seen', 'true'); }} 
+                        className="flex-1 py-4 rounded-xl border border-white/10 text-white/20 text-[9px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                      >
+                        Ignore
+                      </button>
+                      <button 
+                        onClick={handleInstallApp}
+                        className="flex-1 py-4 rounded-xl bg-white text-black text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
+                      >
+                        Initialize
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Final Lock Overlay */}
-            {isDayClosed && activeTab !== 'history' && (
+            {isDayClosed && activeTab !== 'history' && activeTab !== 'profile' && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
