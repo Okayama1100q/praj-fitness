@@ -139,7 +139,7 @@ def coach(data: dict, db: Session = Depends(get_db)):
     # 📅 Previous
     today = str(date.today())
 
-    prev_log = db.query(DailyLog).filter(DailyLog.date == today).first()
+    prev_log = db.query(DailyLog).filter(DailyLog.date == today, DailyLog.user_id == user_id).first()
     prev_surplus = prev_log.surplus if prev_log else 0
 
     adjusted_surplus = surplus + prev_surplus
@@ -172,7 +172,7 @@ def coach(data: dict, db: Session = Depends(get_db)):
     message = decision.get("message_override") or generate_response(adjusted_surplus, decision)
 
     # 💾 Save
-    existing = db.query(DailyLog).filter(DailyLog.date == today).first()
+    existing = db.query(DailyLog).filter(DailyLog.date == today, DailyLog.user_id == user_id).first()
 
     if existing:
         existing.intake = intake
@@ -181,6 +181,7 @@ def coach(data: dict, db: Session = Depends(get_db)):
     else:
         db.add(DailyLog(
             date=today,
+            user_id=user_id,
             intake=intake,
             burn=total_burn,
             surplus=surplus
@@ -213,9 +214,9 @@ def coach(data: dict, db: Session = Depends(get_db)):
 # 📊 LOGS
 # -----------------------------
 @router.get("/logs")
-def get_logs(db: Session = Depends(get_db)):
+def get_logs(user_id: int, db: Session = Depends(get_db)):
 
-    logs = db.query(DailyLog).all()
+    logs = db.query(DailyLog).filter(DailyLog.user_id == user_id).all()
 
     return [
         {

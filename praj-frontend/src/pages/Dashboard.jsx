@@ -99,20 +99,20 @@ const Dashboard = () => {
     if (!isAuth || !userData) {
       navigate('/login');
     } else {
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      loadPersistedData(parsedUser.id);
+      fetchLogs(parsedUser.id);
     }
-    
-    loadPersistedData();
-    fetchLogs();
   }, [navigate]);
 
-  const loadPersistedData = () => {
+  const loadPersistedData = (userId) => {
     const today = new Date().toLocaleDateString('en-CA');
     
-    const savedData = JSON.parse(localStorage.getItem(`praj_data_${today}`));
-    const savedPlan = JSON.parse(localStorage.getItem(`praj_plan_${today}`));
-    const savedNight = JSON.parse(localStorage.getItem(`praj_night_${today}`));
-    const savedHistory = JSON.parse(localStorage.getItem('praj_local_history')) || [];
+    const savedData = JSON.parse(localStorage.getItem(`praj_data_${userId}_${today}`));
+    const savedPlan = JSON.parse(localStorage.getItem(`praj_plan_${userId}_${today}`));
+    const savedNight = JSON.parse(localStorage.getItem(`praj_night_${userId}_${today}`));
+    const savedHistory = JSON.parse(localStorage.getItem(`praj_local_history_${userId}`)) || [];
 
     if (savedData) {
       setResult(savedData.result);
@@ -124,11 +124,14 @@ const Dashboard = () => {
     setLocalHistory(savedHistory);
   };
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (userId) => {
+    const activeUserId = userId || user?.id;
+    if (!activeUserId) return;
+    
     try {
       const response = await request({
         method: 'GET',
-        url: '/logs'
+        url: `/logs?user_id=${activeUserId}`
       });
       setLogs(response.data);
     } catch (err) {
@@ -180,7 +183,7 @@ const Dashboard = () => {
         timestamp: Date.now()
       };
       
-      localStorage.setItem(`praj_data_${today}`, JSON.stringify(sessionData));
+      localStorage.setItem(`praj_data_${user?.id}_${today}`, JSON.stringify(sessionData));
       setResult(response.data);
     } catch (err) {
       console.error("Diagnostic sequence error:", err);
@@ -198,7 +201,7 @@ const Dashboard = () => {
       ...selection,
       timestamp: Date.now()
     };
-    localStorage.setItem(`praj_plan_${today}`, JSON.stringify(planWithTime));
+    localStorage.setItem(`praj_plan_${user?.id}_${today}`, JSON.stringify(planWithTime));
     setSelectedPlan(planWithTime);
   };
 
@@ -214,15 +217,15 @@ const Dashboard = () => {
       ...finalResult
     };
 
-    const savedHistory = JSON.parse(localStorage.getItem('praj_local_history')) || [];
+    const savedHistory = JSON.parse(localStorage.getItem(`praj_local_history_${user?.id}`)) || [];
     const updatedHistory = [...savedHistory.filter(h => h.date !== today), dailyReport];
     
-    localStorage.setItem(`praj_night_${today}`, JSON.stringify(finalResult));
-    localStorage.setItem('praj_local_history', JSON.stringify(updatedHistory));
+    localStorage.setItem(`praj_night_${user?.id}_${today}`, JSON.stringify(finalResult));
+    localStorage.setItem(`praj_local_history_${user?.id}`, JSON.stringify(updatedHistory));
     
     setNightLog(finalResult);
     setLocalHistory(updatedHistory);
-    fetchLogs();
+    fetchLogs(user?.id);
   };
 
   const handleLogout = () => {
@@ -234,9 +237,9 @@ const Dashboard = () => {
   const handleResetDay = () => {
     if (window.confirm("Purge all diagnostic data for today?")) {
       const today = new Date().toLocaleDateString('en-CA');
-      localStorage.removeItem(`praj_data_${today}`);
-      localStorage.removeItem(`praj_plan_${today}`);
-      localStorage.removeItem(`praj_night_${today}`);
+      localStorage.removeItem(`praj_data_${user?.id}_${today}`);
+      localStorage.removeItem(`praj_plan_${user?.id}_${today}`);
+      localStorage.removeItem(`praj_night_${user?.id}_${today}`);
       
       setResult(null);
       setSelectedPlan(null);
@@ -250,7 +253,7 @@ const Dashboard = () => {
 
   const handleClearHistory = () => {
     if (window.confirm("TERMINAL ACTION: Permanently delete all archived history? This cannot be reversed.")) {
-      localStorage.removeItem('praj_local_history');
+      localStorage.removeItem(`praj_local_history_${user?.id}`);
       setLocalHistory([]);
       setLogs([]);
       alert("Archive sequence purged.");
