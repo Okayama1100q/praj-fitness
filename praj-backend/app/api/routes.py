@@ -226,3 +226,20 @@ def get_logs(db: Session = Depends(get_db)):
         }
         for log in logs
     ]
+
+@router.get("/users")
+def get_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+
+    return [
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "number": u.number,
+            "weight": u.weight,
+            "height": u.height,
+            "age": u.age
+        }
+        for u in users
+    ]
