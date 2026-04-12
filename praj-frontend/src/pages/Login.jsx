@@ -38,7 +38,9 @@ const Login = () => {
         data: formData
       });
       
-      if (response.data.access_token) {
+      if (response.data.error) {
+        setError(response.data.error);
+      } else if (response.data.access_token) {
         localStorage.setItem('praj_auth', response.data.access_token);
         localStorage.setItem('praj_user', JSON.stringify(response.data.user));
         navigate('/dashboard');
