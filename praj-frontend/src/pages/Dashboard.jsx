@@ -312,6 +312,46 @@ const Dashboard = () => {
 
       <div className="noise-overlay" />
       
+      {/* Mobile-Only Cyber Overlay Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 lg:hidden overflow-hidden">
+         {/* Vertical marquee */}
+         <div className="absolute top-[20%] -left-[20%] text-transparent rotate-[-90deg] origin-left select-none opacity-40 mix-blend-overlay" style={{ WebkitTextStroke: '2px rgba(255,255,255,0.08)', fontSize: '18vh' }}>
+            <motion.div 
+              animate={{ x: [0, -1000] }} 
+              transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+              className="font-rajdhani font-black tracking-tighter whitespace-nowrap"
+            >
+              • {isAdmin ? 'ADMIN OVERRIDE' : 'PRAJ SEQUENCE'} • {isAdmin ? 'ADMIN OVERRIDE' : 'PRAJ SEQUENCE'} • 
+            </motion.div>
+         </div>
+
+         {/* Holographic Grid overlay */}
+         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_100%_100%_at_50%_0%,#000_20%,transparent_80%)]" />
+
+         {/* Scanner Line */}
+         <motion.div 
+            animate={{ y: ['-20vh', '120vh'] }}
+            transition={{ repeat: Infinity, duration: 7, ease: "linear" }}
+            className="absolute left-0 right-0 h-[15vh] bg-gradient-to-b from-transparent via-indigo-500/10 to-transparent blur-xl"
+         />
+
+         {/* Top Right HUD Elements */}
+         <div className="absolute right-6 top-10 flex flex-col items-end gap-2 text-[8px] font-rajdhani font-black tracking-[0.3em] text-white/30 uppercase">
+            <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-500 shadow-[0_0_10px_#10b981] rounded-full animate-pulse"></span> SYS.OP.OK</p>
+            <p className="opacity-50">ID: {user?.id?.toString().padStart(4, '0') || 'XXXX'}</p>
+            <div className="flex gap-1 mt-2 opacity-50">
+              {[...Array(6)].map((_, i) => (
+                <motion.div 
+                  key={i} 
+                  animate={{ height: ['4px', '16px', '4px'] }} 
+                  transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
+                  className="w-1 bg-white/40 rounded-full" 
+                />
+              ))}
+            </div>
+         </div>
+      </div>
+      
       {/* Premium Sidebar */}
       <nav className="fixed bottom-0 left-0 w-full lg:static lg:w-28 lg:h-screen lg:flex lg:flex-col lg:border-r lg:border-white/5 bg-[#060608]/90 backdrop-blur-3xl z-40 lg:justify-between p-4 lg:p-8 overflow-x-auto border-t border-white/5 lg:border-t-0" style={{ scrollbarWidth: 'none' }}>
         <div className="flex lg:flex-col items-center justify-start lg:justify-center gap-6 lg:gap-12 min-w-max mx-auto lg:mx-0 w-max lg:w-auto px-4 lg:px-0">
