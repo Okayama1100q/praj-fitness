@@ -1,9 +1,46 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { User, Mail, Phone, Weight, Ruler, Calendar, LogOut, RefreshCcw, ShieldCheck, History } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Mail, Phone, Weight, Ruler, Calendar, LogOut, RefreshCcw, ShieldCheck, History, Edit2, Check, X, Loader2 } from 'lucide-react';
+import { request } from '@/config/api';
+import { Input } from './Shared';
 
-const ProfileSection = ({ user, handleLogout, handleResetDay, handleClearHistory }) => {
+const ProfileSection = ({ user, handleLogout, handleResetDay, handleClearHistory, onProfileUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    weight: user?.weight || '',
+    height: user?.height || '',
+    age: user?.age || ''
+  });
+
   if (!user) return null;
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const response = await request({
+        method: 'PUT',
+        url: '/profile',
+        data: {
+          user_id: user.id,
+          weight: parseFloat(formData.weight),
+          height: parseFloat(formData.height),
+          age: parseInt(formData.age, 10)
+        }
+      });
+      
+      if (response.data.user) {
+        localStorage.setItem('praj_user', JSON.stringify(response.data.user));
+        if (onProfileUpdate) onProfileUpdate(response.data.user);
+      }
+      setIsEditing(false);
+    } catch (err) {
+      console.error(err);
+      alert("Diagnostic failure. Cannot update profile.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <motion.div 
@@ -22,25 +59,62 @@ const ProfileSection = ({ user, handleLogout, handleResetDay, handleClearHistory
           <div className="text-center md:text-left space-y-2">
             <h2 className="text-4xl font-black tracking-tighter text-white font-rajdhani uppercase">{user.name}</h2>
             <div className="flex items-center justify-center md:justify-start gap-4">
-              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-white/40 uppercase tracking-widest font-rajdhani">Secure Profile</span>
+              <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-white/40 uppercase tracking-widest font-rajdhani">Secure Profile</span>
               <div className="w-1 h-1 rounded-full bg-white/20" />
-              <span className="text-[10px] text-white/20 font-medium tracking-tight">ID: {user.id?.toString().padStart(4, '0')}</span>
+              <span className="text-xs text-white/20 font-medium tracking-tight">ID: {user.id?.toString().padStart(4, '0')}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Biometric Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <BioCard icon={<Weight />} label="Current Mass" value={`${user.weight} kg`} color="text-indigo-400" />
-        <BioCard icon={<Ruler />} label="Vertical Axis" value={`${user.height} cm`} color="text-amber-400" />
-        <BioCard icon={<Calendar />} label="Chronological Stage" value={`${user.age} Years`} color="text-emerald-400" />
+      <div className="relative">
+        <div className="flex justify-between items-end mb-4 px-2">
+            <h3 className="text-sm font-rajdhani font-black uppercase text-white/40 tracking-widest">Biometric Data</h3>
+            {!isEditing ? (
+                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest">
+                    <Edit2 className="w-3 h-3" /> Edit
+                </button>
+            ) : (
+                <div className="flex items-center gap-4">
+                    <button onClick={() => setIsEditing(false)} className="flex items-center gap-2 text-xs font-bold text-white/40 hover:text-white transition-colors uppercase tracking-widest">
+                        <X className="w-3 h-3" /> Cancel
+                    </button>
+                    <button onClick={handleSave} disabled={loading} className="flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest">
+                        {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Save
+                    </button>
+                </div>
+            )}
+        </div>
+        
+        {isEditing ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 <div className="p-8 rounded-[40px] bg-[#0d0d0f] border border-white/5">
+                    <Weight className="w-6 h-6 text-indigo-400 mb-4" />
+                    <Input label="Current Mass (kg)" type="number" value={formData.weight} onChange={(e) => setFormData({...formData, weight: e.target.value})} />
+                 </div>
+                 <div className="p-8 rounded-[40px] bg-[#0d0d0f] border border-white/5">
+                    <Ruler className="w-6 h-6 text-amber-400 mb-4" />
+                    <Input label="Vertical Axis (cm)" type="number" value={formData.height} onChange={(e) => setFormData({...formData, height: e.target.value})} />
+                 </div>
+                 <div className="p-8 rounded-[40px] bg-[#0d0d0f] border border-white/5">
+                    <Calendar className="w-6 h-6 text-emerald-400 mb-4" />
+                    <Input label="Age (Years)" type="number" value={formData.age} onChange={(e) => setFormData({...formData, age: e.target.value})} />
+                 </div>
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <BioCard icon={<Weight />} label="Current Mass" value={`${user.weight} kg`} color="text-indigo-400" />
+                <BioCard icon={<Ruler />} label="Vertical Axis" value={`${user.height} cm`} color="text-amber-400" />
+                <BioCard icon={<Calendar />} label="Chronological Stage" value={`${user.age} Years`} color="text-emerald-400" />
+            </div>
+        )}
       </div>
 
       {/* Account Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-8 rounded-[40px] bg-white/[0.02] border border-white/5 space-y-6 lg:h-full">
-          <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] font-rajdhani">Communication Link</p>
+          <p className="text-xs font-black text-white/20 uppercase tracking-[0.4em] font-rajdhani">Communication Link</p>
           <div className="space-y-6">
             <InfoItem icon={<Mail />} label="Secure Email" value={user.email} />
             <InfoItem icon={<Phone />} label="Authorization Contact" value={user.number || "Not Configured"} />
@@ -48,7 +122,7 @@ const ProfileSection = ({ user, handleLogout, handleResetDay, handleClearHistory
         </div>
 
         <div className="p-8 rounded-[40px] bg-white/[0.02] border border-white/5 space-y-6">
-            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] font-rajdhani">Tactical Controls</p>
+            <p className="text-xs font-black text-white/20 uppercase tracking-[0.4em] font-rajdhani">Tactical Controls</p>
             <div className="flex flex-col gap-4">
                 <ActionButton 
                   icon={<RefreshCcw />} 
@@ -75,7 +149,7 @@ const ProfileSection = ({ user, handleLogout, handleResetDay, handleClearHistory
       {/* Security Footer */}
       <div className="flex items-center justify-center gap-4 text-white/10 pt-10 border-t border-white/5">
         <ShieldCheck className="w-5 h-5" />
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] font-rajdhani">Biometric Cryptography Active</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] font-rajdhani">Biometric Cryptography Active</p>
       </div>
     </motion.div>
   );
@@ -89,7 +163,7 @@ const BioCard = ({ icon, label, value, color }) => (
         {React.cloneElement(icon, { size: 20 })}
       </div>
       <div>
-        <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1 font-rajdhani">{label}</p>
+        <p className="text-xs font-black text-white/20 uppercase tracking-widest mb-1 font-rajdhani">{label}</p>
         <p className="text-3xl font-black text-white tracking-tighter font-rajdhani">{value}</p>
       </div>
     </div>
@@ -102,7 +176,7 @@ const InfoItem = ({ icon, label, value }) => (
       {React.cloneElement(icon, { size: 18 })}
     </div>
     <div>
-      <p className="text-[8px] font-black text-white/10 uppercase tracking-widest mb-1 font-rajdhani">{label}</p>
+      <p className="text-[10px] font-black text-white/10 uppercase tracking-widest mb-1 font-rajdhani">{label}</p>
       <p className="text-sm font-medium text-white/60">{value}</p>
     </div>
   </div>
@@ -117,7 +191,7 @@ const ActionButton = ({ icon, label, onClick, className }) => (
       <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center">
         {React.cloneElement(icon, { size: 16 })}
       </div>
-      <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+      <span className="text-xs font-black uppercase tracking-widest">{label}</span>
     </div>
     <div className="w-6 h-6 rounded-full border border-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all">
        <User className="w-3 h-3 text-white/20" />

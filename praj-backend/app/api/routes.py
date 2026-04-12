@@ -244,3 +244,39 @@ def get_users(db: Session = Depends(get_db)):
         }
         for u in users
     ]
+
+# -----------------------------
+# 👤 PROFILE UPDATE
+# -----------------------------
+@router.put("/profile")
+def update_profile(data: dict, db: Session = Depends(get_db)):
+    user_id = data.get("user_id")
+    if not user_id:
+        return {"error": "user_id is required"}
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return {"error": "User not found"}
+
+    if "weight" in data:
+        user.weight = float(data["weight"])
+    if "height" in data:
+        user.height = float(data["height"])
+    if "age" in data:
+        user.age = int(data["age"])
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": "Profile updated successfully",
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "number": user.number,
+            "weight": user.weight,
+            "height": user.height,
+            "age": user.age
+        }
+    }

@@ -6,7 +6,7 @@ export const Input = ({ label, type = 'text', value, onChange, placeholder, requ
   return (
     <div className={`flex flex-col space-y-2 w-full group ${className}`}>
       {label && (
-        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
+        <label className="text-xs font-black uppercase tracking-[0.2em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
           {label}
         </label>
       )}
@@ -29,7 +29,7 @@ export const TextArea = ({ label, value, onChange, placeholder, required = false
   return (
     <div className={`flex flex-col space-y-2 w-full group ${className}`}>
       {label && (
-        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
+        <label className="text-xs font-black uppercase tracking-[0.2em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
           {label}
         </label>
       )}
@@ -52,7 +52,7 @@ export const Select = ({ label, value, onChange, options, required = false, clas
   return (
     <div className={`flex flex-col space-y-2 w-full group ${className}`}>
       {label && (
-        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
+        <label className="text-xs font-black uppercase tracking-[0.2em] text-white/20 group-focus-within:text-white/60 transition-colors ml-1 font-inter">
           {label}
         </label>
       )}
@@ -88,7 +88,7 @@ export const Button = ({ children, onClick, type = 'button', loading = false, di
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`relative w-full overflow-hidden rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] text-[10px] py-5 px-6 transition-all shadow-[0_20px_40px_rgba(255,255,255,0.05)] hover:shadow-[0_25px_50px_rgba(255,255,255,0.1)] flex justify-center items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed font-rajdhani ${className}`}
+      className={`relative w-full overflow-hidden rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] text-xs py-5 px-6 transition-all shadow-[0_20px_40px_rgba(255,255,255,0.05)] hover:shadow-[0_25px_50px_rgba(255,255,255,0.1)] flex justify-center items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed font-rajdhani ${className}`}
       {...props}
     >
       {loading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -105,7 +105,7 @@ export const OutlineButton = ({ children, onClick, type = 'button', disabled = f
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`w-full rounded-2xl bg-transparent border border-white/5 text-white/40 font-bold uppercase tracking-[0.2em] text-[9px] py-5 px-6 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-rajdhani hover:text-white hover:border-white/10 ${className}`}
+      className={`w-full rounded-2xl bg-transparent border border-white/5 text-white/40 font-bold uppercase tracking-[0.2em] text-xs py-5 px-6 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-rajdhani hover:text-white hover:border-white/10 ${className}`}
       {...props}
     >
       {children}

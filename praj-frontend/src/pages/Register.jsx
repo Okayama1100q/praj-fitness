@@ -20,6 +20,12 @@ const Register = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    if (localStorage.getItem('praj_auth')) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -74,11 +80,11 @@ const Register = () => {
         
         <div className="text-center mb-12">
           <h1 className="text-5xl font-black tracking-tighter mb-3 uppercase font-rajdhani">Praj Protocol</h1>
-          <p className="text-white/20 font-black text-[10px] tracking-[0.5em] uppercase font-rajdhani">Biometric Alignment Sequence</p>
+          <p className="text-white/20 font-black text-xs tracking-[0.2em] md:tracking-[0.5em] uppercase font-rajdhani">Biometric Alignment Sequence</p>
         </div>
 
         {error && (
-            <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold text-center uppercase tracking-widest">
+            <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-bold text-center uppercase tracking-widest">
                 {error}
             </div>
         )}
@@ -105,7 +111,7 @@ const Register = () => {
             <Input label="Secure Password" name="password" type="password" value={formData.password} onChange={handleChange} required className="pl-12" />
           </div>
 
-          <div className="grid grid-cols-3 gap-6 pt-4 border-t border-white/5 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-white/5 mt-4">
             <div className="relative group">
                 <Weight className="absolute left-4 top-[3.25rem] w-4 h-4 text-white/10 group-focus-within:text-white/40 z-20" />
                 <Input label="kg" name="weight" type="number" value={formData.weight} onChange={handleChange} required className="pl-10" />
@@ -126,7 +132,7 @@ const Register = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="mb-8 p-4 rounded-xl bg-white/[0.03] border border-white/5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] text-center"
+                className="mb-8 p-4 rounded-xl bg-white/[0.03] border border-white/5 text-xs font-black text-white/40 uppercase tracking-[0.2em] text-center"
               >
                 Backend is spinning up. Please wait...
               </motion.div>
@@ -138,7 +144,7 @@ const Register = () => {
           </Button>
         </form>
 
-        <p className="text-center mt-10 text-xs text-white/20 font-bold uppercase tracking-widest">
+        <p className="text-center mt-10 text-sm text-white/20 font-bold uppercase tracking-widest">
           Already aligned?{' '}
           <Link to="/login" className="text-white hover:underline">
             Establish Link

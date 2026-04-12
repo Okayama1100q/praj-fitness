@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { Activity, LogOut, ChevronRight, Moon, History, Zap, CheckCircle2, RefreshCcw, User } from 'lucide-react';
+import { Activity, LogOut, ChevronRight, Moon, History, Zap, CheckCircle2, RefreshCcw, User, Users, Unlock } from 'lucide-react';
 
 import InputCard from '../components/InputCard';
 import ResultCard from '../components/ResultCard';
@@ -9,6 +9,7 @@ import ActionPlan from '../components/ActionPlan';
 import NightUpdate from '../components/NightUpdate';
 import HistorySection from '../components/HistorySection';
 import ProfileSection from '../components/ProfileSection';
+import AdminSection from '../components/AdminSection';
 
 import { request } from '@/config/api';
 
@@ -20,6 +21,8 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('coach'); // 'coach', 'night', 'history'
   const [logs, setLogs] = useState([]);
   const [user, setUser] = useState(null);
+  const [bypassTime, setBypassTime] = useState(false);
+  const isAdmin = user?.email === 'admin@gmail.com';
   
   // Persistence state
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -101,6 +104,9 @@ const Dashboard = () => {
     } else {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      if (parsedUser.email === 'admin@gmail.com') {
+        setActiveTab('admin');
+      }
       loadPersistedData(parsedUser.id);
       fetchLogs(parsedUser.id);
     }
@@ -151,8 +157,8 @@ const Dashboard = () => {
   const BYPASS_TIME_GATING = false; 
   
   const getCurrentHour = () => new Date().getHours();
-  const isCoachTime = BYPASS_TIME_GATING || getCurrentHour() >= 18;
-  const isNightTime = BYPASS_TIME_GATING || getCurrentHour() >= 22;
+  const isCoachTime = BYPASS_TIME_GATING || bypassTime || getCurrentHour() >= 18;
+  const isNightTime = BYPASS_TIME_GATING || bypassTime || getCurrentHour() >= 22;
 
   const isDayClosed = !!nightLog;
 
@@ -307,22 +313,29 @@ const Dashboard = () => {
       <div className="noise-overlay" />
       
       {/* Premium Sidebar */}
-      <nav className="w-full lg:w-28 lg:h-screen lg:flex lg:flex-col lg:border-r lg:border-white/5 bg-black/40 backdrop-blur-3xl z-30 lg:justify-between p-8">
-        <div className="flex lg:flex-col items-center justify-between lg:justify-center gap-12">
-          <motion.div whileHover={{ scale: 1.05 }} className="w-14 h-14 rounded-[20px] bg-white text-black flex items-center justify-center shadow-[0_10px_40px_rgba(255,255,255,0.1)]">
-            <Activity className="w-8 h-8" />
+      <nav className="fixed bottom-0 left-0 w-full lg:static lg:w-28 lg:h-screen lg:flex lg:flex-col lg:border-r lg:border-white/5 bg-[#060608]/90 backdrop-blur-3xl z-40 lg:justify-between p-4 lg:p-8 overflow-x-auto border-t border-white/5 lg:border-t-0" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex lg:flex-col items-center justify-start lg:justify-center gap-6 lg:gap-12 min-w-max mx-auto lg:mx-0 w-max lg:w-auto px-4 lg:px-0">
+          <motion.div whileHover={{ scale: 1.05 }} className="w-10 h-10 lg:w-14 lg:h-14 rounded-2xl lg:rounded-[20px] bg-white text-black hidden lg:flex items-center justify-center shadow-[0_10px_40px_rgba(255,255,255,0.1)]">
+            <Activity className="w-6 h-6 lg:w-8 lg:h-8" />
           </motion.div>
           
-          <div className="flex lg:flex-col gap-8">
-            <NavItem icon={<Zap />} label="Core Scan" active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} />
-            <NavItem icon={<Moon />} label="Shutdown" active={activeTab === 'night'} onClick={() => setActiveTab('night')} />
-            <NavItem icon={<History />} label="Archives" active={activeTab === 'history'} onClick={() => setActiveTab('history')} />
-            <NavItem icon={<User />} label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
+          <div className="flex lg:flex-col gap-4 lg:gap-8">
+            {isAdmin ? (
+              <NavItem icon={<Users />} label="Admin" active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} />
+            ) : (
+              <>
+                <NavItem icon={<Zap />} label="Core Scan" active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} />
+                <NavItem icon={<Moon />} label="Shutdown" active={activeTab === 'night'} onClick={() => setActiveTab('night')} />
+                <NavItem icon={<History />} label="Archives" active={activeTab === 'history'} onClick={() => setActiveTab('history')} />
+                <NavItem icon={<User />} label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
+              </>
+            )}
           </div>
 
-          <div className="lg:mt-auto flex lg:flex-col gap-6 pt-10 border-t border-white/5">
-            <button onClick={handleLogout} className="p-4 text-white/10 hover:text-white transition-all hover:bg-white/5 rounded-2xl">
+          <div className="lg:mt-auto flex lg:flex-col gap-4 lg:gap-6 lg:pt-10 lg:border-t border-white/5 ml-auto lg:ml-0 pr-4 lg:pr-0">
+            <button onClick={handleLogout} className="p-3 lg:p-4 text-rose-500/50 hover:text-rose-400 transition-all hover:bg-rose-500/10 rounded-2xl flex items-center gap-2">
               <LogOut className="w-5 h-5" />
+              <span className="lg:hidden text-xs font-black uppercase tracking-widest font-rajdhani">Exit</span>
             </button>
           </div>
         </div>
@@ -334,10 +347,10 @@ const Dashboard = () => {
           <div className="space-y-0">
              <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 0.1, x: 0 }} className="text-[10vw] font-rajdhani font-black leading-none tracking-tighter">PEAK</motion.div>
              <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 0.1, x: 0 }} transition={{ delay: 0.1 }} className="text-[10vw] font-rajdhani font-black leading-none tracking-tighter text-transparent" style={{ WebkitTextStroke: '1px rgba(255,255,255,1)' }}>PERFORMANCE</motion.div>
-             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="text-[10vw] font-rajdhani font-black leading-none tracking-tighter text-white transform translate-y-[-15px]">PRAJ</motion.div>
+             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="text-[10vw] font-rajdhani font-black leading-none tracking-tighter text-white transform translate-y-[-15px]">{isAdmin ? 'ADMIN' : 'PRAJ'}</motion.div>
           </div>
           <div className="mt-12 h-0.5 w-16 bg-white/10" />
-          <p className="mt-8 text-white/20 text-[10px] font-black uppercase tracking-[1em] leading-loose font-rajdhani">Automated Protocol Core</p>
+          <p className="mt-8 text-white/20 text-[10px] font-black uppercase tracking-[1em] leading-loose font-rajdhani">{isAdmin ? 'Global Overseer' : 'Automated Protocol Core'}</p>
         </div>
 
         {/* Diagnostic Space */}
@@ -377,6 +390,12 @@ const Dashboard = () => {
                         <h3 className="text-3xl font-black text-white tracking-tighter font-rajdhani uppercase">Diagnostic Standby</h3>
                         <p className="text-white/20 text-sm font-medium tracking-widest uppercase">System unlocks at <span className="text-white">18:00 Hours</span></p>
                       </div>
+                      <button 
+                        onClick={() => setBypassTime(true)}
+                        className="mt-6 mx-auto px-6 py-3 rounded-2xl border border-white/10 text-white/40 hover:text-white hover:bg-white/[0.03] transition-all text-xs font-black uppercase tracking-widest flex items-center gap-2"
+                      >
+                         <Unlock className="w-3 h-3" /> Force Override
+                      </button>
                     </motion.div>
                   ) : !result ? (
                     <InputCard 
@@ -426,6 +445,12 @@ const Dashboard = () => {
                         <h3 className="text-3xl font-black text-white tracking-tighter font-rajdhani uppercase">Sequence Pending</h3>
                         <p className="text-white/20 text-sm font-medium tracking-widest uppercase">Night update opens at <span className="text-white">22:00 Hours</span></p>
                       </div>
+                      <button 
+                        onClick={() => setBypassTime(true)}
+                        className="mt-6 mx-auto px-6 py-3 rounded-2xl border border-white/10 text-white/40 hover:text-white hover:bg-white/[0.03] transition-all text-xs font-black uppercase tracking-widest flex items-center gap-2"
+                      >
+                         <Unlock className="w-3 h-3" /> Force Override
+                      </button>
                     </motion.div>
                   ) : (
                     <NightUpdate 
@@ -446,7 +471,12 @@ const Dashboard = () => {
                   handleLogout={handleLogout}
                   handleResetDay={handleResetDay}
                   handleClearHistory={handleClearHistory}
+                  onProfileUpdate={(updated) => setUser(updated)}
                 />
+              )}
+
+              {activeTab === 'admin' && isAdmin && (
+                <AdminSection key="admin" />
               )}
 
               {activeTab === 'history' && (
@@ -495,7 +525,7 @@ const Dashboard = () => {
             </AnimatePresence>
 
             {/* Final Lock Overlay */}
-            {isDayClosed && activeTab !== 'history' && activeTab !== 'profile' && (
+            {isDayClosed && activeTab !== 'history' && activeTab !== 'profile' && activeTab !== 'admin' && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -529,12 +559,13 @@ const Dashboard = () => {
 const NavItem = ({ icon, label, active, onClick }) => (
   <button 
     onClick={onClick}
-    className={`p-5 rounded-[22px] transition-all duration-700 flex items-center justify-center group relative ${
-      active ? 'bg-white text-black shadow-[0_20px_40px_rgba(255,255,255,0.2)] scale-110' : 'text-white/10 hover:text-white/30 hover:bg-white/[0.02]'
+    className={`p-4 lg:p-5 rounded-[18px] lg:rounded-[22px] transition-all duration-700 flex items-center justify-center gap-3 lg:gap-0 group relative ${
+      active ? 'bg-white text-black shadow-[0_20px_40px_rgba(255,255,255,0.2)] md:scale-110' : 'text-white/10 hover:text-white/30 hover:bg-white/[0.02]'
     }`}
   >
-    {React.cloneElement(icon, { className: "w-6 h-6" })}
-    <span className={`absolute left-24 bg-white text-black px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap pointer-events-none hidden lg:block font-rajdhani`}>
+    {React.cloneElement(icon, { className: "w-5 h-5 lg:w-6 lg:h-6" })}
+    <span className="lg:hidden text-[10px] font-black uppercase tracking-widest font-rajdhani">{label}</span>
+    <span className={`absolute left-24 bg-white text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap pointer-events-none hidden lg:block font-rajdhani`}>
       {label}
     </span>
     {active && (
